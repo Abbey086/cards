@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Amanda Cards – Digital Business Cards Uganda</title>
+    <meta
+      name="description"
+      content="Uganda's #1 digital business card platform. Share your brand with a tap using NFC + QR technology."
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+      rel="stylesheet"
+    />
+    <script src="js/supabase.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["DM Sans", "sans-serif"],
+              display: ["Sora", "sans-serif"],
+            },
+            colors: {
+              navy: { DEFAULT: "#1B2B4B", light: "#243560", dark: "#111E38" },
+              gold: { DEFAULT: "#C9A84C", light: "#E8C96D" },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: #fafbfc;
+      }
+      .font-display {
+        font-family: "Sora", sans-serif;
+      }
+      .gold-gradient {
+        background: linear-gradient(135deg, #c9a84c, #e8c96d);
+      }
+      .mesh-bg {
+        background-color: #1b2b4b;
+        background-image:
+          radial-gradient(
+            at 20% 50%,
+            rgba(201, 168, 76, 0.08) 0,
+            transparent 50%
+          ),
+          radial-gradient(at 80% 20%, rgba(36, 53, 96, 0.6) 0, transparent 50%);
+      }
+      .nav-glass {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+      }
+      .floating {
+        animation: float 6s ease-in-out infinite;
+      }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-12px);
+        }
+      }
+      .faq-answer {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s ease;
+      }
+      .faq-answer.open {
+        max-height: 300px;
+      }
+      .chevron-icon {
+        transition: transform 0.3s ease;
+      }
+      .chevron-icon.rotated {
+        transform: rotate(180deg);
+      }
+      .scroll-reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .scroll-reveal.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .mock-card {
+        background: linear-gradient(135deg, #1e3a5f, #243560);
+        border: 1px solid rgba(201, 168, 76, 0.3);
+        border-radius: 20px;
+      }
+      .tag-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(201, 168, 76, 0.12);
+        color: #c9a84c;
+        border: 1px solid rgba(201, 168, 76, 0.25);
+        border-radius: 100px;
+        padding: 6px 14px;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+      }
+      .feature-card {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .feature-card:hover {
+        transform: translateY(-4px);
+      }
+      .card-glow {
+        box-shadow:
+          0 0 40px rgba(201, 168, 76, 0.15),
+          0 20px 60px rgba(27, 43, 75, 0.3);
+      }
+    </style>
+  </head>
+  <body class="antialiased overflow-x-hidden">
+    <!-- NAV -->
+    <nav class="fixed w-full nav-glass z-50 border-b border-gray-100/80 py-3">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center"
+      >
+        <div class="flex items-center gap-2">
+          <img src="logo.png" alt="Amanda Cards" class="h-8 w-auto" />
+          <h1 class="font-display text-lg font-bold text-navy">Amanda<span class="text-gold">Cards</span></h1>
+        </div>
+        <div
+          class="hidden md:flex items-center space-x-8 text-sm font-medium text-gray-500"
+        >
+          <a href="#features" class="hover:text-navy transition">Features</a>
+          <a href="#pricing" class="hover:text-navy transition">Pricing</a>
+          <a href="#faq" class="hover:text-navy transition">FAQ</a>
+          <a href="#contact" class="hover:text-navy transition">Contact</a>
+        </div>
+        <div class="flex items-center gap-3">
+          <a
+            href="login.html"
+            class="text-sm font-medium text-navy hover:text-gold transition hidden sm:block"
+            >Log in</a
+          >
+          <a
+            href="signup.html"
+            class="gold-gradient text-white text-sm font-semibold px-4 py-2 rounded-xl hidden md:block hover:opacity-90 transition shadow-sm"
+            >Get Started</a
+          >
+          <button id="mobileMenuBtn" class="md:hidden p-2 rounded-lg text-navy">
+            <i class="fas fa-bars"></i>
+          </button>
+        </div>
+      </div>
+      <div
+        id="mobileMenu"
+        class="md:hidden hidden bg-white border-t border-gray-100 px-4 py-4"
+      >
+        <div class="flex flex-col gap-4 text-sm font-medium text-gray-600">
+          <a href="#features" onclick="closeMobile()">Features</a>
+          <a href="#pricing" onclick="closeMobile()">Pricing</a>
+          <a href="#faq" onclick="closeMobile()">FAQ</a>
+          <a href="#contact" onclick="closeMobile()">Contact</a>
+          <a href="login.html" class="text-navy font-semibold">Log in</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <section
+      class="mesh-bg min-h-screen flex items-center pt-20 pb-16 px-4 sm:px-6 relative overflow-hidden"
+    >
+      <div
+        class="absolute inset-0 opacity-5"
+        style="
+          background-image: url(&quot;data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A84C' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E&quot;);
+        "
+      ></div>
+      <div class="max-w-7xl mx-auto w-full relative">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          <div>
+            <div class="tag-pill mb-6">
+              <i class="fas fa-bolt text-xs"></i> Uganda's #1 Digital Business
+              Card Platform
+            </div>
+            <h1
+              class="font-display text-5xl md:text-6xl font-bold leading-[1.1] text-white mb-6"
+            >
+              Paper Cards<br /><span class="text-gold">Are History.</span>
+            </h1>
+            <p class="text-blue-100/70 text-lg mb-8 leading-relaxed max-w-lg">
+              Share your brand with a tap. Amanda Cards gives you a smart
+              digital business card that's always updated, always impressive.
+            </p>
+            <div class="flex flex-wrap gap-4 mb-10">
+              <a
+                href="signup.html"
+                class="gold-gradient text-white font-bold px-8 py-3.5 rounded-xl hover:opacity-90 transition shadow-lg text-sm"
+                >Create Your Card &rarr;</a
+              >
+              <a
+                href="#pricing"
+                class="border border-white/20 text-white font-medium px-8 py-3.5 rounded-xl hover:bg-white/10 transition text-sm"
+                >View Pricing</a
+              >
+            </div>
+            <div
+              class="flex flex-wrap items-center gap-6 text-sm text-blue-100/60"
+            >
+              <div class="flex items-center gap-2">
+                <i class="fas fa-check-circle text-gold text-xs"></i> No monthly
+                fees
+              </div>
+              <div class="flex items-center gap-2">
+                <i class="fas fa-check-circle text-gold text-xs"></i> NFC + QR
+                code
+              </div>
+              <div class="flex items-center gap-2">
+                <i class="fas fa-check-circle text-gold text-xs"></i> Instant
+                updates
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-center items-center">
+            <div class="relative">
+              <img
+                src="hero.png"
+                alt="Amanda Cards Hero"
+                class="w-full max-w-md"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS BAR -->
+    <section class="bg-navy py-10 border-y border-gold/10">
+      <div
+        class="max-w-5xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8 text-center"
+      >
+        <div>
+          <div
+            class="font-display text-3xl font-bold text-gold mb-1"
+            id="statCards"
+          >
+            —
+          </div>
+          <div class="text-blue-200/60 text-sm">Cards Created</div>
+        </div>
+        <div>
+          <div
+            class="font-display text-3xl font-bold text-gold mb-1"
+            id="statViews"
+          >
+            —
+          </div>
+          <div class="text-blue-200/60 text-sm">Profile Views</div>
+        </div>
+        <div>
+          <div class="font-display text-3xl font-bold text-gold mb-1">98%</div>
+          <div class="text-blue-200/60 text-sm">Satisfaction Rate</div>
+        </div>
+        <div>
+          <div class="font-display text-3xl font-bold text-gold mb-1">UG</div>
+          <div class="text-blue-200/60 text-sm">Made in Uganda</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="py-20 px-4 bg-slate-50">
+      <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-14 scroll-reveal">
+          <h2
+            class="font-display text-3xl md:text-4xl font-bold text-navy mb-3"
+          >
+            Everything you need to stand out
+          </h2>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div
+            class="feature-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm scroll-reveal"
+          >
+            <div
+              class="w-10 h-10 bg-navy/5 rounded-xl flex items-center justify-center mb-4"
+            >
+              <i class="fas fa-qrcode text-navy"></i>
+            </div>
+            <h4 class="font-display font-semibold text-navy mb-2">QR Code</h4>
+            <p class="text-sm text-gray-500 leading-relaxed">
+              Every card comes with a unique QR code for contactless sharing.
+            </p>
+          </div>
+          <div
+            class="feature-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm scroll-reveal"
+            style="transition-delay: 0.05s"
+          >
+            <div
+              class="w-10 h-10 bg-navy/5 rounded-xl flex items-center justify-center mb-4"
+            >
+              <i class="fas fa-chart-bar text-navy"></i>
+            </div>
+            <h4 class="font-display font-semibold text-navy mb-2">
+              Analytics Dashboard
+            </h4>
+            <p class="text-sm text-gray-500 leading-relaxed">
+              Track profile visits, link clicks, saves, time-on-page, and more
+              in real-time.
+            </p>
+          </div>
+          <div
+            class="feature-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm scroll-reveal"
+            style="transition-delay: 0.1s"
+          >
+            <div
+              class="w-10 h-10 bg-navy/5 rounded-xl flex items-center justify-center mb-4"
+            >
+              <i class="fas fa-share-nodes text-navy"></i>
+            </div>
+            <h4 class="font-display font-semibold text-navy mb-2">
+              Social Links
+            </h4>
+            <p class="text-sm text-gray-500 leading-relaxed">
+              Connect all your social media — Instagram, LinkedIn, TikTok,
+              Facebook, WhatsApp and more.
+            </p>
+          </div>
+          <div
+            class="feature-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm scroll-reveal"
+            style="transition-delay: 0.15s"
+          >
+            <div
+              class="w-10 h-10 bg-navy/5 rounded-xl flex items-center justify-center mb-4"
+            >
+              <i class="fas fa-images text-navy"></i>
+            </div>
+            <h4 class="font-display font-semibold text-navy mb-2">
+              Photo Gallery
+            </h4>
+            <p class="text-sm text-gray-500 leading-relaxed">
+              Upload up to 5 photos (Starter) or 10 photos (Premium) to showcase
+              your work beautifully.
+            </p>
+          </div>
+          <div
+            class="feature-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm scroll-reveal"
+            style="transition-delay: 0.2s"
+          >
+            <div
+              class="w-10 h-10 bg-gold/10 rounded-xl flex items-center justify-center mb-4"
+            >
+              <i class="fas fa-video text-gold"></i>
+            </div>
+            <div class="flex items-center gap-2 mb-2">
+              <h4 class="font-display font-semibold text-navy">
+                Video Feature
+              </h4>
+              <span
+                class="text-xs bg-gold/10 text-gold px-2 py-0.5 rounded-full font-medium"
+                >Premium</span
+              >
+            </div>
+            <p class="text-sm text-gray-500 leading-relaxed">
+              Add a brand or intro video exclusively on the Premium plan.
+            </p>
+          </div>
+          <div
+            class="feature-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm scroll-reveal"
+            style="transition-delay: 0.25s"
+          >
+            <div
+              class="w-10 h-10 bg-navy/5 rounded-xl flex items-center justify-center mb-4"
+            >
+              <i class="fas fa-wifi-slash text-navy"></i>
+            </div>
+            <h4 class="font-display font-semibold text-navy mb-2">
+              Offline Support
+            </h4>
+            <p class="text-sm text-gray-500 leading-relaxed">
+              Your digital card works even without internet connection, ensuring
+              reliable access anytime.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section id="pricing" class="py-20 px-4 max-w-7xl mx-auto">
+      <div class="text-center mb-14 scroll-reveal">
+        <h2 class="font-display text-3xl md:text-4xl font-bold text-navy mb-3">
+          Simple, yearly pricing
+        </h2>
+        <p class="text-gray-500">
+          No subscriptions. No hidden fees. Pay yearly, use forever.
+        </p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+        <div
+          class="bg-white border-2 border-gray-100 rounded-3xl p-8 scroll-reveal hover:border-navy/20 transition"
+        >
+          <h3 class="font-display font-bold text-navy text-xl mb-1">Starter</h3>
+          <p class="text-gray-500 text-sm mb-4">
+            Perfect for individuals & freelancers
+          </p>
+          <div class="font-display text-4xl font-bold text-navy">
+            65,000 <span class="text-sm text-gray-400 font-normal">UGX</span>
+          </div>
+          <span class="text-xs text-gray-400">yearly payment</span>
+          <ul class="space-y-3 my-6 text-sm">
+            <li class="flex items-center gap-2.5 text-gray-600">
+              <i class="fas fa-check text-navy text-xs w-4"></i> 1 physical card
+            </li>
+            <li class="flex items-center gap-2.5 text-gray-600">
+              <i class="fas fa-check text-navy text-xs w-4"></i> Digital profile
+              page
+            </li>
+            <li class="flex items-center gap-2.5 text-gray-600">
+              <i class="fas fa-check text-navy text-xs w-4"></i> Up to 5 gallery
+              photos
+            </li>
+            <li class="flex items-center gap-2.5 text-gray-600">
+              <i class="fas fa-check text-navy text-xs w-4"></i> Social media
+              links
+            </li>
+            <li class="flex items-center gap-2.5 text-gray-600">
+              <i class="fas fa-check text-navy text-xs w-4"></i> QR code +
+              analytics
+            </li>
+            <li class="flex items-center gap-2.5 text-gray-600">
+              <i class="fas fa-check text-navy text-xs w-4"></i> 1 card template
+            </li>
+            <li class="flex items-center gap-2.5 text-gray-400">
+              <i class="fas fa-times text-gray-300 text-xs w-4"></i> Brand
+              colours
+            </li>
+            <li class="flex items-center gap-2.5 text-gray-400">
+              <i class="fas fa-times text-gray-300 text-xs w-4"></i> Video &
+              contact form
+            </li>
+          </ul>
+          <a
+            href="signup.html"
+            class="block w-full border-2 border-navy text-navy font-bold py-3 rounded-xl text-center text-sm hover:bg-navy hover:text-white transition"
+            >Get Starter</a
+          >
+        </div>
+        <div
+          class="bg-navy border-2 border-navy rounded-3xl p-8 scroll-reveal relative overflow-hidden"
+          style="transition-delay: 0.1s"
+        >
+          <div
+            class="absolute top-4 right-4 bg-gold text-navy text-xs font-bold px-3 py-1 rounded-full"
+          >
+            Most Popular
+          </div>
+          <h3 class="font-display font-bold text-white text-xl mb-1">
+            Premium
+          </h3>
+          <p class="text-blue-200/60 text-sm mb-4">
+            For businesses & professionals
+          </p>
+          <div class="font-display text-4xl font-bold text-white">
+            120,000
+            <span class="text-sm text-blue-200/60 font-normal">UGX</span>
+          </div>
+          <span class="text-xs text-blue-200/40">yearly payment</span>
+          <ul class="space-y-3 my-6 text-sm">
+            <li class="flex items-center gap-2.5 text-blue-100">
+              <i class="fas fa-check text-gold text-xs w-4"></i> 2 physical
+              cards
+            </li>
+            <li class="flex items-center gap-2.5 text-blue-100">
+              <i class="fas fa-check text-gold text-xs w-4"></i> Digital profile
+              page
+            </li>
+            <li class="flex items-center gap-2.5 text-blue-100">
+              <i class="fas fa-check text-gold text-xs w-4"></i> Up to 10
+              gallery photos
+            </li>
+            <li class="flex items-center gap-2.5 text-blue-100">
+              <i class="fas fa-check text-gold text-xs w-4"></i> Social media
+              links
+            </li>
+            <li class="flex items-center gap-2.5 text-blue-100">
+              <i class="fas fa-check text-gold text-xs w-4"></i> QR code +
+              analytics
+            </li>
+            <li class="flex items-center gap-2.5 text-blue-100">
+              <i class="fas fa-check text-gold text-xs w-4"></i> 5 card
+              templates
+            </li>
+            <li class="flex items-center gap-2.5 text-blue-100">
+              <i class="fas fa-check text-gold text-xs w-4"></i> Brand colours
+            </li>
+            <li class="flex items-center gap-2.5 text-blue-100">
+              <i class="fas fa-check text-gold text-xs w-4"></i> Video + contact
+              form
+            </li>
+          </ul>
+          <a
+            href="signup.html"
+            class="block w-full gold-gradient text-navy font-bold py-3 rounded-xl text-center text-sm hover:opacity-90 transition"
+            >Get Premium</a
+          >
+        </div>
+      </div>
+      <p class="text-center text-xs text-gray-400 mt-6">
+        <i class="fas fa-info-circle mr-1"></i> Card replacement (phone number
+        change): UGX 20,000. Phone numbers are printed physically and cannot be
+        changed remotely.
+      </p>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="py-20 px-4 bg-slate-50">
+      <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-14 scroll-reveal">
+          <h2 class="font-display text-3xl font-bold text-navy mb-3">
+            Frequently Asked Questions
+          </h2>
+        </div>
+        <div class="space-y-3 scroll-reveal">
+          <div
+            class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm"
+          >
+            <button
+              class="faq-btn w-full text-left px-6 py-4 font-medium flex justify-between items-center"
+            >
+              <span class="text-sm text-navy font-semibold"
+                >What is a digital business card?</span
+              ><i
+                class="fas fa-chevron-down text-gray-400 text-xs chevron-icon"
+              ></i>
+            </button>
+            <div class="faq-answer px-6 bg-gray-50">
+              <p class="py-4 text-sm text-gray-600">
+                A digital business card is an online profile page holding all
+                your contact info, social links, services and photos — shareable
+                via NFC tap or QR scan. No printing, no running out of cards.
+              </p>
+            </div>
+          </div>
+          <div
+            class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm"
+          >
+            <button
+              class="faq-btn w-full text-left px-6 py-4 font-medium flex justify-between items-center"
+            >
+              <span class="text-sm text-navy font-semibold"
+                >Can I change my phone number after setup?</span
+              ><i
+                class="fas fa-chevron-down text-gray-400 text-xs chevron-icon"
+              ></i>
+            </button>
+            <div class="faq-answer px-6 bg-gray-50">
+              <p class="py-4 text-sm text-gray-600">
+                Your phone number is physically printed on the NFC card, so it
+                cannot be changed remotely. A card replacement is available for
+                UGX 20,000. Please double-check your number before saving.
+              </p>
+            </div>
+          </div>
+          <div
+            class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm"
+          >
+            <button
+              class="faq-btn w-full text-left px-6 py-4 font-medium flex justify-between items-center"
+            >
+              <span class="text-sm text-navy font-semibold"
+                >How long does activation take?</span
+              ><i
+                class="fas fa-chevron-down text-gray-400 text-xs chevron-icon"
+              ></i>
+            </button>
+            <div class="faq-answer px-6 bg-gray-50">
+              <p class="py-4 text-sm text-gray-600">
+                After selecting a package, our admin contacts you within 24
+                hours to confirm payment and activate your account.
+              </p>
+            </div>
+          </div>
+          <div
+            class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm"
+          >
+            <button
+              class="faq-btn w-full text-left px-6 py-4 font-medium flex justify-between items-center"
+            >
+              <span class="text-sm text-navy font-semibold"
+                >Does the recipient need an app?</span
+              ><i
+                class="fas fa-chevron-down text-gray-400 text-xs chevron-icon"
+              ></i>
+            </button>
+            <div class="faq-answer px-6 bg-gray-50">
+              <p class="py-4 text-sm text-gray-600">
+                No app required. Anyone with a smartphone can view your profile
+                via QR scan — it opens right in the browser.
+              </p>
+            </div>
+          </div>
+          <div
+            class="faq-item bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm"
+          >
+            <button
+              class="faq-btn w-full text-left px-6 py-4 font-medium flex justify-between items-center"
+            >
+              <span class="text-sm text-navy font-semibold"
+                >Can I update my profile after setup?</span
+              ><i
+                class="fas fa-chevron-down text-gray-400 text-xs chevron-icon"
+              ></i>
+            </button>
+            <div class="faq-answer px-6 bg-gray-50">
+              <p class="py-4 text-sm text-gray-600">
+                Yes! Update photos, services, socials, description, website,
+                location — anytime from your dashboard. The NFC card always
+                points to your latest profile.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="py-20 px-4">
+      <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-12 scroll-reveal">
+          <h2 class="font-display text-3xl font-bold text-navy mb-3">
+            Get in Touch
+          </h2>
+          <p class="text-gray-500">Questions? We're happy to help.</p>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div class="scroll-reveal">
+            <div class="bg-navy rounded-3xl p-8 h-full text-white">
+              <h3 class="font-display font-bold text-xl mb-6">Contact Info</h3>
+              <div class="space-y-5">
+                <div class="flex items-start gap-4">
+                  <div
+                    class="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center shrink-0"
+                  >
+                    <i class="fas fa-phone text-gold text-sm"></i>
+                  </div>
+                  <div>
+                    <div class="text-xs text-blue-200/60 mb-0.5">Phone / Whatsapp</div>
+                    <div class="text-sm">256753943599</div>
+                  </div>
+                </div>
+                <div class="flex items-start gap-4">
+                  <div
+                    class="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center shrink-0"
+                  >
+                    <i class="fas fa-envelope text-gold text-sm"></i>
+                  </div>
+                  <div>
+                    <div class="text-xs text-blue-200/60 mb-0.5">Email</div>
+                    <div class="text-sm">amandatechnologies@gmail.com</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="scroll-reveal" style="transition-delay: 0.1s">
+            <form
+              id="contactForm"
+              class="space-y-4"
+              onsubmit="submitContact(event)"
+            >
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1.5"
+                    >Name</label
+                  ><input
+                    type="text"
+                    name="name"
+                    required
+                    placeholder="Your name"
+                    class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
+                  />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1.5"
+                    >Email</label
+                  ><input
+                    type="email"
+                    name="email"
+                    required
+                    placeholder="your@email.com"
+                    class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
+                  />
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5"
+                  >Subject</label
+                ><input
+                  type="text"
+                  name="subject"
+                  required
+                  placeholder="How can we help?"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-navy/30"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1.5"
+                  >Message</label
+                ><textarea
+                  name="message"
+                  rows="5"
+                  required
+                  placeholder="Tell us more…"
+                  class="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-navy/30 resize-none"
+                ></textarea>
+              </div>
+              <button
+                type="submit"
+                id="contactSubmitBtn"
+                class="w-full bg-navy text-white font-bold py-3.5 rounded-xl hover:bg-navy-dark transition text-sm"
+              >
+                Send Message
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-navy text-white py-10 border-t border-white/5 mt-8">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-blue-200/50"
+      >
+        <div class="flex items-center gap-2">
+          <img src="logo.png" alt="Amanda Cards" class="h-7 w-auto" /><span
+            class="font-display font-bold text-white"
+            >Amanda<span class="text-gold">Cards</span></span
+          >
+        </div>
+        <div class="flex gap-6 text-xs">
+          <a href="#features" class="hover:text-white transition">Features</a
+          ><a href="#pricing" class="hover:text-white transition">Pricing</a
+          ><a href="login.html" class="hover:text-white transition">Login</a>
+        </div>
+        <div class="text-xs">
+          &copy; 2025 Amanda Technologies. All rights reserved.
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      // Mobile menu
+      document
+        .getElementById("mobileMenuBtn")
+        .addEventListener("click", () =>
+          document.getElementById("mobileMenu").classList.toggle("hidden"),
+        );
+      function closeMobile() {
+        document.getElementById("mobileMenu").classList.add("hidden");
+      }
+
+      // FAQ accordion
+      document.querySelectorAll(".faq-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const item = btn.parentElement,
+            ans = item.querySelector(".faq-answer"),
+            icon = btn.querySelector(".chevron-icon"),
+            isOpen = ans.classList.contains("open");
+          document
+            .querySelectorAll(".faq-answer")
+            .forEach((a) => a.classList.remove("open"));
+          document
+            .querySelectorAll(".chevron-icon")
+            .forEach((i) => i.classList.remove("rotated"));
+          if (!isOpen) {
+            ans.classList.add("open");
+            icon.classList.add("rotated");
+          }
+        });
+      });
+
+      // Scroll reveal
+      const obs = new IntersectionObserver(
+        (entries) =>
+          entries.forEach((e) => {
+            if (e.isIntersecting) e.target.classList.add("visible");
+          }),
+        { threshold: 0.1 },
+      );
+      document
+        .querySelectorAll(".scroll-reveal")
+        .forEach((el) => obs.observe(el));
+
+      // Load live stats from Supabase
+      async function loadStats() {
+        try {
+          // Total active profiles
+          const profiles = await sbFetch(
+            "/rest/v1/profiles?plan_status=eq.active&select=id",
+            { headers: { Prefer: "count=exact" } },
+          );
+          // Total visits
+          const visits = await sbFetch("/rest/v1/visits?select=id", {
+            headers: { Prefer: "count=exact" },
+          });
+          // We read count from Content-Range header — use a raw fetch for that
+          const pRes = await fetch(
+            `${SUPABASE_URL}/rest/v1/profiles?plan_status=eq.active&select=id`,
+            { headers: { apikey: SUPABASE_ANON_KEY, Prefer: "count=exact" } },
+          );
+          const vRes = await fetch(`${SUPABASE_URL}/rest/v1/visits?select=id`, {
+            headers: { apikey: SUPABASE_ANON_KEY, Prefer: "count=exact" },
+          });
+          const pCount =
+            pRes.headers.get("Content-Range")?.split("/")[1] || "0";
+          const vCount =
+            vRes.headers.get("Content-Range")?.split("/")[1] || "0";
+          document.getElementById("statCards").textContent =
+            (12 * parseInt(pCount)).toLocaleString() + "+";
+          document.getElementById("statViews").textContent =
+            (parseInt(vCount) * 8).toLocaleString() + "+";
+        } catch (e) {
+          document.getElementById("statCards").textContent = "—";
+          document.getElementById("statViews").textContent = "—";
+        }
+      }
+
+      // Contact form — saves to Supabase messages table (card_user_id = null for landing page)
+      async function submitContact(e) {
+        e.preventDefault();
+        const btn = document.getElementById("contactSubmitBtn");
+        setLoading(btn, true);
+        const fd = new FormData(e.target);
+        try {
+          await dbInsert(
+            "messages",
+            {
+              sender_name: fd.get("name"),
+              sender_email: fd.get("email"),
+              message: `[Subject: ${fd.get("subject")}] ${fd.get("message")}`,
+              card_user_id: null,
+            },
+            false,
+          );
+          showToast("Message sent successfully!");
+          e.target.reset();
+        } catch (err) { 
+            console.log(err)
+          showToast("Failed to send. Please try again.", "error");
+        } finally {
+          setLoading(btn, false, "Send Message");
+        }
+      }
+
+      loadStats();
+    </script>
+  </body>
+</html>

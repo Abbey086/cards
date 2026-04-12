@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login – Amanda Cards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="js/supabase.js"></script>
+    <script>tailwind.config={theme:{extend:{fontFamily:{sans:['DM Sans','sans-serif'],display:['Sora','sans-serif']},colors:{navy:{DEFAULT:'#1B2B4B',light:'#243560'},gold:{DEFAULT:'#C9A84C',light:'#E8C96D'}}}}}</script>
+    <style>
+        body{font-family:'DM Sans',sans-serif;}
+        .font-display{font-family:'Sora',sans-serif;}
+        .gold-gradient{background:linear-gradient(135deg,#C9A84C,#E8C96D);}
+        .auth-bg{background:linear-gradient(135deg,#1B2B4B 0%,#243560 100%);}
+        .glass-input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:#fff;transition:all .2s;width:100%;padding:11px 14px;border-radius:12px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;}
+        .glass-input:focus{border-color:rgba(201,168,76,.5);background:rgba(255,255,255,.08);}
+        .glass-input::placeholder{color:rgba(255,255,255,.3);}
+        .divider{display:flex;align-items:center;gap:12px;}
+        .divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.08);}
+        input:-webkit-autofill{-webkit-box-shadow:0 0 0 30px #1e3561 inset !important;-webkit-text-fill-color:#fff !important;}
+    </style>
+</head>
+<body class="auth-bg min-h-screen flex items-center justify-center px-4 py-12">
+<div class="w-full max-w-sm">
+    <div class="text-center mb-8">
+        <a href="index.html" class="inline-flex items-center gap-2 mb-6">
+            <div class="w-9 h-9 gold-gradient rounded-xl flex items-center justify-center"><i class="fas fa-id-card text-white text-sm"></i></div>
+            <span class="font-display font-bold text-xl text-white">Amanda<span class="text-gold">Cards</span></span>
+        </a>
+        <h1 class="font-display text-2xl font-bold text-white mb-1">Welcome back</h1>
+        <p class="text-blue-200/50 text-sm">Sign in to your account</p>
+    </div>
+
+    <div class="bg-white/5 border border-white/10 rounded-3xl p-7 backdrop-blur-sm">
+        <!-- OAuth -->
+
+
+        <!-- Email form -->
+        <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs text-blue-200/60 font-medium mb-1.5">Email address</label>
+                <input type="email" id="email" placeholder="you@example.com" class="glass-input" required>
+            </div>
+            <div>
+                <div class="flex justify-between items-center mb-1.5">
+                    <label class="block text-xs text-blue-200/60 font-medium">Password</label>
+                    <a href="forgot-password.html" class="text-xs text-gold/70 hover:text-gold transition">Forgot password?</a>
+                </div>
+                <div class="relative">
+                    <input type="password" id="password" placeholder="••••••••" class="glass-input pr-10" required>
+                    <button type="button" onclick="togglePwd('password','eye1')" class="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition">
+                        <i id="eye1" class="fas fa-eye text-xs"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="loginError" class="hidden text-xs text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2"></div>
+            <button type="submit" id="loginBtn" class="w-full gold-gradient text-navy font-bold py-3.5 rounded-xl text-sm hover:opacity-90 transition mt-1">Sign In</button>
+        </form>
+    </div>
+
+    <p class="text-center text-sm text-blue-200/40 mt-6">
+        Don't have an account? <a href="signup.html" class="text-gold hover:text-gold-light transition font-medium">Sign up</a>
+    </p>
+    <p class="text-center text-xs text-blue-200/20 mt-3"><a href="index.html" class="hover:text-white/40 transition">← Back to home</a></p>
+</div>
+
+<script>
+    // Redirect if already logged in
+    (async () => {
+        const s = getSession();
+        if (s?.access_token) {
+            window.location.href = isAdmin() ? 'admin/dashboard.html' : 'dashboard.html';
+        }
+    })();
+
+    function togglePwd(id, iconId) {
+        const inp = document.getElementById(id), icon = document.getElementById(iconId);
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+        icon.classList.toggle('fa-eye'); icon.classList.toggle('fa-eye-slash');
+    }
+
+    function showError(msg) {
+        const el = document.getElementById('loginError');
+        el.textContent = msg; el.classList.remove('hidden');
+    }
+
+    async function handleLogin(e) {
+        e.preventDefault();
+        const btn = document.getElementById('loginBtn');
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        document.getElementById('loginError').classList.add('hidden');
+        setLoading(btn, true);
+        let dt;
+
+        try {
+            let x = await signInEmail(email, password);
+            window.location.href = isAdmin() ? 'admin/dashboard.html' : 'dashboard.html';
+        } catch (error) {
+            showError(error.message || 'Invalid email or password.');
+            console.log(error)
+            setLoading(btn, false, 'Sign In');
+        }
+    }
+
+
+</script>
+</body>
+</html>

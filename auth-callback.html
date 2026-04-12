@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signing in… – Amanda Cards</title>
+    <script src="js/supabase.js"></script>
+    <style>
+        body { font-family: 'DM Sans', sans-serif; background: #1B2B4B; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .spinner { width: 40px; height: 40px; border: 3px solid rgba(201,168,76,0.2); border-top-color: #C9A84C; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        p { color: rgba(255,255,255,0.5); font-size: 14px; margin-top: 16px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div style="text-align:center">
+        <div class="spinner" style="margin:0 auto"></div>
+        <p>Signing you in…</p>
+    </div>
+    <script>
+        // Handle OAuth callback — Supabase puts tokens in URL hash
+        (async () => {
+            const hash = window.location.hash.substring(1);
+            const params = new URLSearchParams(hash);
+            const access_token = params.get('access_token');
+            const refresh_token = params.get('refresh_token');
+            const expires_at = params.get('expires_at');
+
+            if (access_token) {
+                // Fetch user info
+                try {
+                    const user = await sbFetch('/auth/v1/user');
+                    saveSession({ access_token, refresh_token, expires_at: parseInt(expires_at), user });
+
+                    // Ensure profile row exists
+                    const existing = await dbSelect('profiles', `?id=eq.${user.id}&select=id`);
+                    if (!existing || existing.length === 0) {
+                        const meta = user.user_metadata || {};
+                        await dbInsert('profiles', {
+                            id: user.id,
+                            first_name: meta.full_name?.split(' ')[0] || meta.name?.split(' ')[0] || '',
+                            last_name: meta.full_name?.split(' ').slice(1).join(' ') || '',
+                            email: user.email,
+                            slug: slugify((meta.full_name || user.email.split('@')[0]) + '-' + user.id.slice(0,6))
+                        }, true);
+                    }
+
+                    window.location.href = isAdmin() ? 'admin/dashboard.html' : 'dashboard.html';
+                } catch (err) {
+                    window.location.href = 'login.html?error=oauth_failed';
+                }
+            } else {
+                window.location.href = 'login.html?error=no_token';
+            }
+        })();
+    </script>
+</body>
+</html>

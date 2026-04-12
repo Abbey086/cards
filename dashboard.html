@@ -1,0 +1,2104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard – Amanda Cards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script src="js/supabase.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["DM Sans", "sans-serif"],
+              display: ["Sora", "sans-serif"],
+            },
+            colors: {
+              navy: { DEFAULT: "#1B2B4B", light: "#243560", dark: "#111E38" },
+              gold: { DEFAULT: "#C9A84C", light: "#E8C96D" },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: #f4f6fa;
+      }
+      .font-display {
+        font-family: "Sora", sans-serif;
+      }
+      .gold-gradient {
+        background: linear-gradient(135deg, #c9a84c, #e8c96d);
+      }
+      .sidebar {
+        width: 256px;
+        min-height: 100vh;
+        background: #1b2b4b;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 40;
+        transition: transform 0.3s ease;
+      }
+      @media (max-width: 768px) {
+        .sidebar {
+          transform: translateX(-100%);
+        }
+        .sidebar.open {
+          transform: translateX(0);
+        }
+      }
+      .main-content {
+        margin-left: 256px;
+      }
+      @media (max-width: 768px) {
+        .main-content {
+          margin-left: 0;
+        }
+      }
+      .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        border-radius: 12px;
+        font-size: 13.5px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.55);
+        transition: all 0.2s;
+        cursor: pointer;
+      }
+      .nav-link:hover,
+      .nav-link.active {
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+      }
+      .nav-link.active {
+        background: rgba(201, 168, 76, 0.15);
+        color: #c9a84c;
+      }
+      .stat-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+      .form-input {
+        width: 100%;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 11px 14px;
+        font-size: 13.5px;
+        outline: none;
+        transition: border 0.2s;
+        font-family: "DM Sans", sans-serif;
+        box-sizing: border-box;
+      }
+      .form-input:focus {
+        border-color: #1b2b4b;
+      }
+      .form-input:disabled {
+        background: #f9fafb;
+        color: #9ca3af;
+        cursor: not-allowed;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 10px;
+        border-radius: 100px;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 30;
+      }
+      .overlay.show {
+        display: block;
+      }
+      .pkg-card {
+        border-radius: 24px;
+        border: 2px solid #e5e7eb;
+        cursor: pointer;
+        transition: all 0.2s;
+        padding: 24px;
+        background: #fff;
+      }
+      .pkg-card.selected {
+        border-color: #c9a84c;
+        background: #fffbef;
+      }
+      .setup-step {
+        background: #fff;
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 16px;
+        border: 2px solid #f3f4f6;
+      }
+      .skeleton {
+        background: linear-gradient(
+          90deg,
+          #f0f0f0 25%,
+          #e0e0e0 50%,
+          #f0f0f0 75%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 8px;
+      }
+      @keyframes shimmer {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 16px;
+      }
+      .modal.show {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body class="antialiased">
+    <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="p-5 border-b border-white/10">
+        <div class="flex items-center gap-2">
+          <div
+            class="w-8 h-8 gold-gradient rounded-xl flex items-center justify-center"
+          >
+            <i class="fas fa-id-card text-white text-xs"></i>
+          </div>
+          <span class="font-display font-bold text-white text-base"
+            >Amanda<span class="text-gold">Cards</span></span
+          >
+        </div>
+      </div>
+      <div class="p-5 border-b border-white/10">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 gold-gradient rounded-xl flex items-center justify-center font-display font-bold text-navy text-sm"
+            id="avatarInitial"
+          >
+            ?
+          </div>
+          <div>
+            <div class="text-white text-sm font-semibold" id="sidebarName">
+              <span class="skeleton inline-block w-20 h-3"></span>
+            </div>
+            <div id="planBadge" class="badge mt-1 bg-white/10 text-white/40">
+              Loading…
+            </div>
+          </div>
+        </div>
+      </div>
+      <nav class="p-3 space-y-1">
+        <div
+          class="nav-link active"
+          onclick="showView('overview')"
+          id="nav-overview"
+        >
+          <i class="fas fa-compass w-4 text-center"></i> Overview
+        </div>
+        <div class="nav-link" onclick="showView('profile')" id="nav-profile">
+          <i class="fas fa-user-pen w-4 text-center"></i> Edit Profile
+        </div>
+        <div class="nav-link" onclick="showView('messages')" id="nav-messages">
+          <i class="fas fa-envelope w-4 text-center"></i> Messages
+          <span
+            class="ml-auto bg-gold text-navy text-xs font-bold px-1.5 py-0.5 rounded-full hidden"
+            id="msgBadge"
+            >0</span
+          >
+        </div>
+        <div class="nav-link" onclick="showView('plan')" id="nav-plan">
+          <i class="fas fa-credit-card w-4 text-center"></i> My Plan
+        </div>
+      </nav>
+      <div
+        class="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10"
+      >
+        <div class="nav-link" id="viewCardLink">
+          <i class="fas fa-eye w-4 text-center text-gold"></i> View My Card
+        </div>
+        <div class="nav-link mt-1" onclick="signOut()">
+          <i class="fas fa-sign-out-alt w-4 text-center"></i> Log Out
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main-content min-h-screen">
+      <div
+        class="bg-white border-b border-gray-100 px-4 sm:px-6 py-3 flex items-center justify-between sticky top-0 z-20"
+      >
+        <div class="flex items-center gap-4">
+          <button
+            class="md:hidden p-2 rounded-lg text-gray-500"
+            onclick="openSidebar()"
+          >
+            <i class="fas fa-bars"></i>
+          </button>
+          <h1 class="font-display font-bold text-navy text-lg" id="pageTitle">
+            Overview
+          </h1>
+        </div>
+        <div
+          class="w-8 h-8 gold-gradient rounded-xl flex items-center justify-center font-display font-bold text-navy text-xs"
+          id="topAvatar"
+        >
+          ?
+        </div>
+      </div>
+
+      <div class="p-4 sm:p-6">
+        <!-- ====== OVERVIEW ====== -->
+        <div id="view-overview">
+          <div id="noPlanState" class="hidden">
+            <div
+              class="bg-white rounded-3xl p-8 border border-gray-100 text-center max-w-lg mx-auto mt-8"
+            >
+              <div
+                class="w-16 h-16 bg-navy/5 rounded-2xl flex items-center justify-center mx-auto mb-5"
+              >
+                <i class="fas fa-id-card text-navy text-2xl"></i>
+              </div>
+              <h2 class="font-display font-bold text-navy text-xl mb-2">
+                You don't have a plan yet
+              </h2>
+              <p class="text-gray-500 text-sm mb-6">
+                Choose a package to get started with your digital business card.
+              </p>
+              <button
+                onclick="
+                  showView('plan');
+                  document.querySelector('#nav-plan').click();
+                "
+                class="gold-gradient text-navy font-bold px-8 py-3 rounded-xl text-sm hover:opacity-90 transition"
+              >
+                Choose a Package →
+              </button>
+            </div>
+          </div>
+
+          <div id="pendingState" class="hidden">
+            <div
+              class="bg-white rounded-3xl p-8 border border-amber-100 max-w-lg mx-auto mt-8 text-center"
+            >
+              <div
+                class="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-5"
+              >
+                <i class="fas fa-clock text-amber-500 text-2xl"></i>
+              </div>
+              <h2 class="font-display font-bold text-navy text-xl mb-2">
+                Awaiting Activation
+              </h2>
+              <p class="text-gray-500 text-sm mb-2">
+                We've received your package request and will contact you at:
+              </p>
+              <div
+                class="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-4"
+              >
+                <span class="font-semibold text-navy text-sm" id="pendingPhone"
+                  >—</span
+                >
+              </div>
+              <p class="text-xs text-gray-400">
+                Activation usually takes within 24 hours.
+              </p>
+            </div>
+          </div>
+
+          <div id="activeState" class="hidden">
+            <div
+              class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6"
+            >
+              <div>
+                <h2 class="font-display text-xl font-bold text-navy">
+                  Welcome back, <span id="welcomeName">—</span> 👋
+                </h2>
+                <p class="text-gray-500 text-sm">
+                  Here's how your card is performing.
+                </p>
+              </div>
+              <button
+                id="viewLiveBtn"
+                class="flex items-center gap-2 bg-navy text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-navy-dark transition"
+              >
+                <i class="fas fa-external-link-alt text-xs"></i> View Live Card
+              </button>
+            </div>
+
+            <!-- Profile completion -->
+            <div
+              id="setupBar"
+              class="bg-navy rounded-2xl p-5 mb-6 flex items-center gap-4 hidden"
+            >
+              <div class="relative w-14 h-14 shrink-0">
+                <svg class="w-14 h-14 -rotate-90" viewBox="0 0 56 56">
+                  <circle
+                    cx="28"
+                    cy="28"
+                    r="22"
+                    fill="none"
+                    stroke="rgba(255,255,255,.1)"
+                    stroke-width="5"
+                  />
+                  <circle
+                    id="progressRing"
+                    cx="28"
+                    cy="28"
+                    r="22"
+                    fill="none"
+                    stroke="#C9A84C"
+                    stroke-width="5"
+                    stroke-linecap="round"
+                    stroke-dasharray="138.2"
+                    stroke-dashoffset="138.2"
+                  />
+                </svg>
+                <div
+                  class="absolute inset-0 flex items-center justify-center font-display font-bold text-white text-xs"
+                  id="progressPct"
+                >
+                  0%
+                </div>
+              </div>
+              <div class="flex-1">
+                <div class="text-white font-semibold text-sm mb-0.5">
+                  Complete Your Profile
+                </div>
+                <div class="text-blue-200/60 text-xs" id="setupBarMsg">
+                  Fill in your details so visitors can find you.
+                </div>
+              </div>
+              <button
+                onclick="showView('profile')"
+                class="shrink-0 text-gold text-xs font-semibold hover:underline"
+              >
+                Set Up →
+              </button>
+            </div>
+
+            <!-- Stats -->
+            <div
+              class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+              id="statsGrid"
+            >
+              <div class="stat-card">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs text-gray-400 font-medium"
+                    >Profile Views</span
+                  >
+                  <div
+                    class="w-8 h-8 bg-navy/5 rounded-xl flex items-center justify-center"
+                  >
+                    <i class="fas fa-eye text-navy text-xs"></i>
+                  </div>
+                </div>
+                <div
+                  class="font-display text-2xl font-bold text-navy h-8 w-16"
+                  id="statViews"
+                >
+                  —
+                </div>
+                <div class="text-xs text-gray-400 mt-1" id="statViewsChange">
+                  —
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs text-gray-400 font-medium"
+                    >Contact Saves</span
+                  >
+                  <div
+                    class="w-8 h-8 bg-navy/5 rounded-xl flex items-center justify-center"
+                  >
+                    <i class="fas fa-bookmark text-navy text-xs"></i>
+                  </div>
+                </div>
+                <div
+                  class="font-display text-2xl font-bold text-navy"
+                  id="statSaves"
+                >
+                  —
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs text-gray-400 font-medium"
+                    >Link Clicks</span
+                  >
+                  <div
+                    class="w-8 h-8 bg-navy/5 rounded-xl flex items-center justify-center"
+                  >
+                    <i class="fas fa-link text-navy text-xs"></i>
+                  </div>
+                </div>
+                <div
+                  class="font-display text-2xl font-bold text-navy"
+                  id="statClicks"
+                >
+                  —
+                </div>
+                <div class="text-xs text-gray-400 mt-1">All links combined</div>
+              </div>
+              <div class="stat-card">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-xs text-gray-400 font-medium"
+                    >Messages</span
+                  >
+                  <div
+                    class="w-8 h-8 bg-navy/5 rounded-xl flex items-center justify-center"
+                  >
+                    <i class="fas fa-envelope text-navy text-xs"></i>
+                  </div>
+                </div>
+                <div
+                  class="font-display text-2xl font-bold text-navy"
+                  id="statMessages"
+                >
+                  —
+                </div>
+                <div class="text-xs text-gray-400 mt-1">Unread</div>
+              </div>
+            </div>
+
+            <!-- Link breakdown + recent messages -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              <div class="bg-white rounded-2xl p-5 border border-gray-100">
+                <h3 class="font-display font-semibold text-navy text-sm mb-4">
+                  Link Performance
+                </h3>
+                <div id="linkPerformance" class="space-y-3">
+                  <div class="skeleton h-8 w-full rounded-xl"></div>
+                  <div class="skeleton h-8 w-full rounded-xl"></div>
+                  <div class="skeleton h-8 w-full rounded-xl"></div>
+                </div>
+              </div>
+              <div class="bg-white rounded-2xl p-5 border border-gray-100">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="font-display font-semibold text-navy text-sm">
+                    Recent Messages
+                  </h3>
+                  <button
+                    onclick="showView('messages')"
+                    class="text-xs text-gold hover:underline"
+                  >
+                    View all
+                  </button>
+                </div>
+                <div id="recentMsgList" class="space-y-3">
+                  <div class="skeleton h-16 w-full rounded-xl"></div>
+                  <div class="skeleton h-16 w-full rounded-xl"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== PLAN ====== -->
+        <div id="view-plan" class="hidden">
+          <div id="planChooser" class="max-w-2xl mx-auto">
+            <div class="text-center mb-8">
+              <h2 class="font-display text-2xl font-bold text-navy mb-2">
+                Choose Your Package
+              </h2>
+              <p class="text-gray-500 text-sm">
+                Select a plan then provide your contact number. We'll activate
+                your card within 24 hours.
+              </p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
+              <div
+                class="pkg-card"
+                id="pkg-starter"
+                onclick="selectPkg('starter')"
+              >
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="font-display font-bold text-navy">Starter</h3>
+                  <div
+                    class="w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center"
+                    id="radio-starter"
+                  >
+                    <div
+                      class="w-2.5 h-2.5 rounded-full"
+                      id="dot-starter"
+                    ></div>
+                  </div>
+                </div>
+                <div class="font-display text-3xl font-bold text-navy mb-1">
+                  65,000
+                  <span class="text-sm text-gray-400 font-normal">UGX</span>
+                </div>
+                <div class="text-xs text-gray-400 mb-4">one-time</div>
+                <ul class="space-y-2 text-xs text-gray-600">
+                  <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-navy"></i> 1 NFC physical card
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-navy"></i> 5 gallery photos
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-navy"></i> 1 template
+                  </li>
+                  <li class="flex items-center gap-2 text-gray-300">
+                    <i class="fas fa-times"></i> Brand colours
+                  </li>
+                  <li class="flex items-center gap-2 text-gray-300">
+                    <i class="fas fa-times"></i> Video & contact form
+                  </li>
+                </ul>
+              </div>
+              <div
+                class="pkg-card relative"
+                id="pkg-premium"
+                onclick="selectPkg('premium')"
+              >
+                <div
+                  class="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-navy text-xs font-bold px-3 py-1 rounded-full"
+                >
+                  Best Value
+                </div>
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="font-display font-bold text-navy">Premium</h3>
+                  <div
+                    class="w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center"
+                    id="radio-premium"
+                  >
+                    <div
+                      class="w-2.5 h-2.5 rounded-full"
+                      id="dot-premium"
+                    ></div>
+                  </div>
+                </div>
+                <div class="font-display text-3xl font-bold text-navy mb-1">
+                  120,000
+                  <span class="text-sm text-gray-400 font-normal">UGX</span>
+                </div>
+                <div class="text-xs text-gray-400 mb-4">one-time</div>
+                <ul class="space-y-2 text-xs text-gray-600">
+                  <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-gold"></i> 2 NFC physical cards
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-gold"></i> 10 gallery photos
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-gold"></i> 5 templates
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-gold"></i> Brand colours
+                  </li>
+                  <li class="flex items-center gap-2">
+                    <i class="fas fa-check text-gold"></i> Video & contact form
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="bg-white rounded-2xl p-6 border border-gray-100">
+              <h3 class="font-display font-semibold text-navy mb-1">
+                Your Contact Number
+              </h3>
+              <p class="text-xs text-gray-400 mb-4">
+                Our admin will contact this number to confirm payment and
+                activate your package.
+              </p>
+              <div class="space-y-3">
+                <input
+                  type="tel"
+                  id="contactPhone"
+                  placeholder="+256 700 000 000"
+                  class="form-input w-full"
+                  oninput="validatePkgForm()"
+                />
+                <input
+                  type="text"
+                  id="packagePromoCode"
+                  placeholder="Promo code (optional)"
+                  class="form-input w-full"
+                />
+                <button
+                  onclick="submitPackage()"
+                  id="submitPkgBtn"
+                  class="gold-gradient text-navy font-bold px-6 py-3 rounded-xl text-sm hover:opacity-90 transition w-full"
+                  disabled
+                >
+                  Submit Request
+                </button>
+              </div>
+              <p id="pkgError" class="text-xs text-red-500 mt-2 hidden">
+                Please select a plan and enter a phone number.
+              </p>
+            </div>
+          </div>
+
+          <div id="currentPlanView" class="hidden max-w-lg mx-auto">
+            <div
+              class="bg-white rounded-3xl p-8 border border-gray-100 text-center"
+            >
+              <div
+                class="w-16 h-16 gold-gradient rounded-2xl flex items-center justify-center mx-auto mb-4"
+              >
+                <i class="fas fa-check text-white text-2xl"></i>
+              </div>
+              <h2 class="font-display font-bold text-navy text-xl mb-1">
+                Your Current Plan
+              </h2>
+              <div
+                class="text-2xl font-display font-bold text-gold my-3"
+                id="currentPlanLabel"
+              >
+                —
+              </div>
+              <div class="badge mx-auto mb-4" id="currentPlanStatus">—</div>
+              <div class="mt-4 p-4 bg-gray-50 rounded-2xl text-left">
+                <div class="text-xs text-gray-400 mb-1">Your Card URL</div>
+                <a
+                  id="currentCardUrl"
+                  href="#"
+                  target="_blank"
+                  class="text-sm font-medium text-navy hover:text-gold transition hover:underline"
+                  >—</a
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ====== PROFILE SETUP ====== -->
+        <div id="view-profile" class="hidden max-w-2xl mx-auto">
+          <div
+            id="profileLockedBanner"
+            class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-6 flex items-center gap-3"
+          >
+            <i class="fas fa-lock text-amber-500"></i>
+            <div>
+              <div class="font-semibold text-amber-800 text-sm">
+                Profile Locked
+              </div>
+              <div class="text-xs text-amber-600">
+                Your package must be activated first.
+              </div>
+            </div>
+          </div>
+
+          <!-- Logo -->
+          <div class="setup-step">
+            <h3
+              class="font-display font-semibold text-navy mb-4 flex items-center gap-2"
+            >
+              <span
+                class="w-6 h-6 bg-navy text-white rounded-full text-xs flex items-center justify-center font-bold"
+                >1</span
+              >
+              Logo / Profile Image
+            </h3>
+            <div class="flex items-center gap-5">
+              <div
+                class="w-20 h-20 rounded-2xl bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition overflow-hidden"
+                id="logoPreview"
+                onclick="document.getElementById('logoInput').click()"
+              >
+                <i
+                  class="fas fa-camera text-gray-400 text-xl"
+                  id="logoPlaceholder"
+                ></i>
+              </div>
+              <input
+                type="file"
+                id="logoInput"
+                accept="image/*"
+                class="hidden"
+                onchange="handleLogoUpload(event)"
+              />
+              <div>
+                <p class="text-sm font-medium text-navy mb-1">
+                  Upload your logo or photo
+                </p>
+                <p class="text-xs text-gray-400">
+                  PNG, JPG up to 5MB. Square recommended.
+                </p>
+                <button
+                  onclick="document.getElementById('logoInput').click()"
+                  class="mt-2 text-xs bg-gray-100 hover:bg-gray-200 text-navy font-medium px-3 py-1.5 rounded-lg transition"
+                >
+                  Browse Files
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Phone -->
+          <div class="setup-step">
+            <h3
+              class="font-display font-semibold text-navy mb-2 flex items-center gap-2"
+            >
+              <span
+                class="w-6 h-6 bg-navy text-white rounded-full text-xs flex items-center justify-center font-bold"
+                >2</span
+              >
+              Phone Number
+            </h3>
+            <div
+              class="bg-red-50 border border-red-100 rounded-xl p-3 mb-3 flex items-start gap-2"
+            >
+              <i
+                class="fas fa-exclamation-triangle text-red-500 mt-0.5 text-sm"
+              ></i>
+              <p class="text-xs text-red-600">
+                <strong>⚠️ Critical Warning:</strong> This phone number will be
+                <strong>physically printed</strong> on your NFC card. It
+                <strong>cannot be changed</strong> after saving without paying
+                <strong>UGX 20,000</strong> for a replacement card. Triple-check
+                before saving.
+              </p>
+            </div>
+            <input
+              type="tel"
+              id="profilePhone"
+              placeholder="+256 700 000 000"
+              class="form-input"
+            />
+            <div
+              id="phoneLockedMsg"
+              class="hidden mt-2 flex items-center gap-2 text-xs text-gray-500 bg-gray-50 rounded-lg p-2"
+            >
+              <i class="fas fa-lock text-gray-400"></i> Phone number is locked.
+              Contact us to request a change (UGX 20,000 fee).
+            </div>
+          </div>
+
+          <!-- Basic Info -->
+          <div class="setup-step">
+            <h3
+              class="font-display font-semibold text-navy mb-4 flex items-center gap-2"
+            >
+              <span
+                class="w-6 h-6 bg-navy text-white rounded-full text-xs flex items-center justify-center font-bold"
+                >3</span
+              >
+              Basic Information
+            </h3>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="text-xs text-gray-500 font-medium mb-1.5 block"
+                  >First Name</label
+                ><input
+                  type="text"
+                  id="profFirstName"
+                  class="form-input"
+                  placeholder="Jane"
+                />
+              </div>
+              <div>
+                <label class="text-xs text-gray-500 font-medium mb-1.5 block"
+                  >Last Name</label
+                ><input
+                  type="text"
+                  id="profLastName"
+                  class="form-input"
+                  placeholder="Nakato"
+                />
+              </div>
+            </div>
+            <div class="mb-4">
+              <label class="text-xs text-gray-500 font-medium mb-1.5 block"
+                >Job Title / Tagline</label
+              ><input
+                type="text"
+                id="profTitle"
+                class="form-input"
+                placeholder="Digital Marketing Specialist"
+              />
+            </div>
+            <div class="mb-4">
+              <label class="text-xs text-gray-500 font-medium mb-1.5 block"
+                >Brief Description</label
+              ><textarea
+                id="profBio"
+                rows="3"
+                class="form-input resize-none"
+                placeholder="Tell visitors who you are…"
+              ></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="text-xs text-gray-500 font-medium mb-1.5 block"
+                  >Email</label
+                ><input
+                  type="email"
+                  id="profEmail"
+                  class="form-input"
+                  placeholder="you@email.com"
+                />
+              </div>
+              <div>
+                <label class="text-xs text-gray-500 font-medium mb-1.5 block"
+                  >Website</label
+                ><input
+                  type="url"
+                  id="profWebsite"
+                  class="form-input"
+                  placeholder="https://yoursite.com"
+                />
+              </div>
+            </div>
+            <div>
+              <label class="text-xs text-gray-500 font-medium mb-1.5 block"
+                >Location</label
+              ><input
+                type="text"
+                id="profLocation"
+                class="form-input"
+                placeholder="Kampala, Uganda"
+              />
+            </div>
+          </div>
+
+          <!-- Socials -->
+          <div class="setup-step">
+            <h3
+              class="font-display font-semibold text-navy mb-4 flex items-center gap-2"
+            >
+              <span
+                class="w-6 h-6 bg-navy text-white rounded-full text-xs flex items-center justify-center font-bold"
+                >4</span
+              >
+              Social Media Links
+            </h3>
+            <div class="space-y-3">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 bg-pink-50 rounded-xl flex items-center justify-center shrink-0"
+                >
+                  <i class="fab fa-instagram text-pink-500 text-sm"></i>
+                </div>
+                <input
+                  type="url"
+                  id="socIg"
+                  class="form-input"
+                  placeholder="Instagram URL"
+                />
+              </div>
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center shrink-0"
+                >
+                  <i class="fab fa-facebook-f text-blue-600 text-sm"></i>
+                </div>
+                <input
+                  type="url"
+                  id="socFb"
+                  class="form-input"
+                  placeholder="Facebook URL"
+                />
+              </div>
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center shrink-0"
+                >
+                  <i class="fab fa-linkedin-in text-blue-700 text-sm"></i>
+                </div>
+                <input
+                  type="url"
+                  id="socLi"
+                  class="form-input"
+                  placeholder="LinkedIn URL"
+                />
+              </div>
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 bg-green-50 rounded-xl flex items-center justify-center shrink-0"
+                >
+                  <i class="fab fa-whatsapp text-green-500 text-sm"></i>
+                </div>
+                <input
+                  type="tel"
+                  id="socWa"
+                  class="form-input"
+                  placeholder="WhatsApp number"
+                />
+              </div>
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 bg-gray-100 rounded-xl flex items-center justify-center shrink-0"
+                >
+                  <i class="fab fa-tiktok text-gray-800 text-sm"></i>
+                </div>
+                <input
+                  type="url"
+                  id="socTk"
+                  class="form-input"
+                  placeholder="TikTok URL"
+                />
+              </div>
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 bg-sky-50 rounded-xl flex items-center justify-center shrink-0"
+                >
+                  <i class="fab fa-twitter text-sky-500 text-sm"></i>
+                </div>
+                <input
+                  type="url"
+                  id="socTw"
+                  class="form-input"
+                  placeholder="Twitter / X URL"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Services -->
+          <div class="setup-step">
+            <h3
+              class="font-display font-semibold text-navy mb-4 flex items-center gap-2"
+            >
+              <span
+                class="w-6 h-6 bg-navy text-white rounded-full text-xs flex items-center justify-center font-bold"
+                >5</span
+              >
+              Services
+            </h3>
+            <div id="servicesList" class="space-y-2 mb-3"></div>
+            <button
+              onclick="addServiceRow()"
+              class="text-xs text-navy font-medium flex items-center gap-1 hover:underline"
+            >
+              <i class="fas fa-plus-circle text-gold"></i> Add service
+            </button>
+          </div>
+
+          <!-- Gallery -->
+          <div class="setup-step">
+            <h3
+              class="font-display font-semibold text-navy mb-2 flex items-center gap-2"
+            >
+              <span
+                class="w-6 h-6 bg-navy text-white rounded-full text-xs flex items-center justify-center font-bold"
+                >6</span
+              >
+              Gallery Photos
+            </h3>
+            <p class="text-xs text-gray-400 mb-4" id="galleryLimitText">
+              Upload up to 5 photos (Starter plan)
+            </p>
+            <div
+              class="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-2"
+              id="galleryGrid"
+            ></div>
+            <input
+              type="file"
+              id="galleryInput"
+              accept="image/*"
+              multiple
+              class="hidden"
+              onchange="handleGalleryUpload(event)"
+            />
+            <p class="text-xs text-gray-400">
+              Click a slot to upload. Images are saved to your card immediately.
+            </p>
+          </div>
+
+          <!-- Video (Premium) -->
+          <div class="setup-step hidden" id="videoStep">
+            <h3
+              class="font-display font-semibold text-navy mb-2 flex items-center gap-2"
+            >
+              <span
+                class="w-6 h-6 bg-gold text-navy rounded-full text-xs flex items-center justify-center font-bold"
+                >7</span
+              >
+              Brand Video
+              <span class="badge bg-gold/10 text-gold ml-2">Premium</span>
+            </h3>
+            <p class="text-xs text-gray-400 mb-3">
+              Upload your brand video (MP4, max 50MB).
+            </p>
+            <div class="flex items-center gap-5">
+              <div
+                class="w-20 h-20 rounded-2xl bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition overflow-hidden"
+                id="videoPreview"
+                onclick="document.getElementById('videoInput').click()"
+              >
+                <i
+                  class="fas fa-video text-gray-400 text-xl"
+                  id="videoPlaceholder"
+                ></i>
+              </div>
+              <input
+                type="file"
+                id="videoInput"
+                accept="video/*"
+                class="hidden"
+                onchange="handleVideoUpload(event)"
+              />
+              <div>
+                <p class="text-sm font-medium text-navy mb-1">
+                  Upload your video
+                </p>
+                <p class="text-xs text-gray-400">
+                  MP4 format recommended. Max 50MB.
+                </p>
+                <button
+                  onclick="document.getElementById('videoInput').click()"
+                  class="mt-2 text-xs bg-gray-100 hover:bg-gray-200 text-navy font-medium px-3 py-1.5 rounded-lg transition"
+                >
+                  Browse Files
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Brand Colour (Premium) -->
+          <div class="setup-step hidden" id="colourStep">
+            <h3
+              class="font-display font-semibold text-navy mb-2 flex items-center gap-2"
+            >
+              <span
+                class="w-6 h-6 bg-gold text-navy rounded-full text-xs flex items-center justify-center font-bold"
+                id="colourStepNum"
+                >8</span
+              >
+              Brand Colour
+              <span class="badge bg-gold/10 text-gold ml-2">Premium</span>
+            </h3>
+            <p class="text-xs text-gray-400 mb-3">
+              This will be your profile page's primary colour.
+            </p>
+            <div class="flex items-center gap-4">
+              <input
+                type="color"
+                id="brandColour"
+                value="#1B2B4B"
+                class="w-14 h-14 rounded-xl border-2 border-gray-200 cursor-pointer"
+                oninput="
+                  document.getElementById('colourPreviewLabel').textContent =
+                    this.value
+                "
+              />
+              <div>
+                <div
+                  class="text-sm font-medium text-navy"
+                  id="colourPreviewLabel"
+                >
+                  #1B2B4B
+                </div>
+                <p class="text-xs text-gray-400">
+                  Click to pick your brand colour
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Template -->
+          <div class="setup-step hidden">
+            <h3
+              class="font-display font-semibold text-navy mb-4 flex items-center gap-2"
+            >
+              <span
+                class="w-6 h-6 bg-navy text-white rounded-full text-xs flex items-center justify-center font-bold"
+                id="templateStepNum"
+                >7</span
+              >
+              Card Template
+            </h3>
+            <div
+              class="grid grid-cols-2 sm:grid-cols-3 gap-3"
+              id="templatesGrid"
+            ></div>
+          </div>
+
+          <button
+            onclick="saveProfile()"
+            id="saveProfileBtn"
+            class="w-full gold-gradient text-navy font-bold py-4 rounded-2xl text-sm hover:opacity-90 transition mt-2"
+          >
+            Save Profile
+          </button>
+        </div>
+
+        <!-- ====== MESSAGES ====== -->
+        <div id="view-messages" class="hidden max-w-2xl mx-auto">
+          <div id="messagesList" class="space-y-3">
+            <div class="skeleton h-20 w-full rounded-2xl"></div>
+            <div class="skeleton h-20 w-full rounded-2xl"></div>
+          </div>
+          <div id="noMessages" class="hidden text-center py-16">
+            <i
+              class="fas fa-envelope-open text-gray-300 text-4xl mb-4 block"
+            ></i>
+            <p class="text-gray-400 text-sm">
+              No messages yet. Share your card to start receiving them!
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // ── State ──────────────────────────────────────────────────
+      let APP = {
+        user: null,
+        profile: null,
+        cardProfile: null,
+        services: [],
+        gallery: [],
+        selectedPkg: null,
+        selectedTemplate: 0,
+        galleryUploading: false,
+        videoUploading: false,
+        videoUrl: null,
+      };
+
+      // ── Boot ───────────────────────────────────────────────────
+      async function boot() {
+        const session = await requireAuth(false);
+        if (!session) return;
+        APP.user = session.user;
+
+        // Load profile from DB
+        await loadProfile();
+        renderSidebar();
+        showView("overview");
+      }
+
+      async function loadProfile() {
+        try {
+          const rows = await dbSelect(
+            "profiles",
+            `?id=eq.${APP.user.id}&select=*`,
+          );
+          APP.profile = rows?.[0] || null;
+
+          if (APP.profile) {
+            // Load card profile
+            const cp = await dbSelect(
+              "card_profiles",
+              `?user_id=eq.${APP.user.id}&select=*`,
+            );
+            APP.cardProfile = cp?.[0] || null;
+            APP.videoUrl = APP.cardProfile?.video_url || null;
+            // Load services
+            const sv = await dbSelect(
+              "services",
+              `?user_id=eq.${APP.user.id}&select=*&order=sort_order.asc`,
+            );
+            APP.services = sv || [];
+            // Load gallery
+            const gl = await dbSelect(
+              "gallery",
+              `?user_id=eq.${APP.user.id}&select=*&order=sort_order.asc`,
+            );
+            APP.gallery = gl || [];
+          }
+        } catch (e) {
+          showToast("Failed to load profile data.", "error");
+        }
+      }
+
+      // ── Sidebar render ─────────────────────────────────────────
+      function renderSidebar() {
+        const p = APP.profile;
+        const name = p
+          ? `${p.first_name || ""} ${p.last_name || ""}`.trim() ||
+            APP.user.email
+          : APP.user.email;
+        const initial = name.charAt(0).toUpperCase();
+        document.getElementById("avatarInitial").textContent = initial;
+        document.getElementById("topAvatar").textContent = initial;
+        document.getElementById("sidebarName").textContent = name;
+        document.getElementById("welcomeName").textContent =
+          p?.first_name || name;
+
+        const badge = document.getElementById("planBadge");
+        if (!p?.plan) {
+          badge.textContent = "No Plan";
+          badge.className = "badge bg-white/10 text-white/40";
+        } else if (p.plan_status === "pending") {
+          badge.textContent = "⏳ Pending";
+          badge.className = "badge bg-amber-400/20 text-amber-300";
+        } else if (p.plan === "premium") {
+          badge.textContent = "⭐ Premium";
+          badge.className = "badge bg-gold/20 text-gold";
+        } else {
+          badge.textContent = "Starter";
+          badge.className = "badge bg-blue-400/20 text-blue-200";
+        }
+
+        // Card URL
+        if (p?.slug) {
+          const url = `${window.location.origin}/card/${p.slug}`;
+          document.getElementById("viewCardLink").onclick = () =>
+            window.open(url, "_blank");
+          document.getElementById("viewLiveBtn").onclick = () =>
+            window.open(url, "_blank");
+        }
+      }
+
+      // ── View router ────────────────────────────────────────────
+      function showView(view) {
+        ["overview", "plan", "profile", "messages"].forEach((v) => {
+          document
+            .getElementById("view-" + v)
+            .classList.toggle("hidden", v !== view);
+          const n = document.getElementById("nav-" + v);
+          if (n) n.classList.toggle("active", v === view);
+        });
+        const titles = {
+          overview: "Overview",
+          plan: "My Plan",
+          profile: "Edit Profile",
+          messages: "Messages",
+        };
+        document.getElementById("pageTitle").textContent = titles[view] || view;
+        closeSidebar();
+
+        if (view === "overview") renderOverview();
+        else if (view === "plan") renderPlan();
+        else if (view === "profile") renderProfileForm();
+        else if (view === "messages") loadMessages();
+      }
+
+      // ── Overview ───────────────────────────────────────────────
+      async function renderOverview() {
+        const p = APP.profile;
+        const noPlan = document.getElementById("noPlanState");
+        const pending = document.getElementById("pendingState");
+        const active = document.getElementById("activeState");
+
+        if (!p?.plan) {
+          noPlan.classList.remove("hidden");
+          pending.classList.add("hidden");
+          active.classList.add("hidden");
+          return;
+        }
+        if (p.plan_status === "pending") {
+          noPlan.classList.add("hidden");
+          pending.classList.remove("hidden");
+          active.classList.add("hidden");
+          document.getElementById("pendingPhone").textContent =
+            p.contact_phone || "—";
+          return;
+        }
+        // Active
+        noPlan.classList.add("hidden");
+        pending.classList.add("hidden");
+        active.classList.remove("hidden");
+
+        // Profile completion
+        const cp = APP.cardProfile;
+        const fields = [
+          cp?.avatar_url,
+          cp?.phone,
+          cp?.title,
+          cp?.bio,
+          cp?.email || cp?.website,
+          APP.services.length > 0,
+          APP.gallery.length > 0,
+        ];
+        const done = fields.filter(Boolean).length;
+        const pct = Math.round((done / fields.length) * 100);
+        const ring = document.getElementById("progressRing");
+        const circ = 2 * Math.PI * 22;
+        ring.style.strokeDashoffset = circ - (pct / 100) * circ;
+        document.getElementById("progressPct").textContent = pct + "%";
+        if (pct < 100)
+          document.getElementById("setupBar").classList.remove("hidden");
+
+        // Load stats
+        await loadOverviewStats();
+      }
+
+      async function loadOverviewStats() {
+        const uid = APP.user.id;
+        try {
+          const [viewsRes, savesRes, clicksRes, msgsRes, videoPlaysRes] =
+            await Promise.all([
+              fetch(
+                `${SUPABASE_URL}/rest/v1/visits?user_id=eq.${uid}&select=id`,
+                {
+                  headers: { apikey: SUPABASE_ANON_KEY, Prefer: "count=exact" },
+                },
+              ),
+              fetch(
+                `${SUPABASE_URL}/rest/v1/link_clicks?user_id=eq.${uid}&select=id`,
+                {
+                  headers: { apikey: SUPABASE_ANON_KEY, Prefer: "count=exact" },
+                },
+              ).catch(() => ({ headers: { get: () => "0/0" } })),
+              fetch(
+                `${SUPABASE_URL}/rest/v1/link_clicks?user_id=eq.${uid}&select=link_type&link_type=eq.save_contact`,
+                {
+                  headers: { apikey: SUPABASE_ANON_KEY, Prefer: "count=exact" },
+                },
+              ),
+              fetch(
+                `${SUPABASE_URL}/rest/v1/messages?card_user_id=eq.${uid}&read=eq.false&select=id`,
+                {
+                  headers: {
+                    apikey: SUPABASE_ANON_KEY,
+                    Authorization: `Bearer ${getToken()}`,
+                    Prefer: "count=exact",
+                  },
+                },
+              ),
+              fetch(
+                `${SUPABASE_URL}/rest/v1/link_clicks?user_id=eq.${uid}&select=link_type&link_type=eq.video_play`,
+                {
+                  headers: { apikey: SUPABASE_ANON_KEY, Prefer: "count=exact" },
+                },
+              ),
+            ]);
+
+          const cnt = (r) =>
+            parseInt(r.headers.get("Content-Range")?.split("/")[1] || "0");
+          const views = cnt(viewsRes),
+            clicks = cnt(clicksRes),
+            msgs = cnt(msgsRes);
+          const saves = cnt(savesRes);
+          const videoPlays = cnt(videoPlaysRes);
+
+          document.getElementById("statViews").textContent =
+            views.toLocaleString();
+
+          document.getElementById("statMessages").textContent =
+            msgs.toLocaleString();
+          document.getElementById("statViewsChange").textContent =
+            views > 0 ? `${views} total visits` : "No visits yet";
+
+          // Unread badge
+          if (msgs > 0) {
+            const b = document.getElementById("msgBadge");
+            b.textContent = msgs;
+            b.classList.remove("hidden");
+          }
+
+          // Link performance
+          const clicks_data = await dbSelect(
+            "link_clicks",
+            `?user_id=eq.${uid}&select=link_type`,
+          );
+          renderLinkPerformance(clicks_data || []);
+          window.videoPlays = clicks_data
+            .filter((c) => c.link_type === "video_play")
+            .length.toLocaleString();
+
+          // Recent messages
+          await loadRecentMessages();
+        } catch (e) {
+          console.error("Stats error:", e);
+        }
+      }
+
+      function renderLinkPerformance(clicks) {
+        const counts = {};
+        clicks.forEach((c) => {
+          counts[c.link_type] = (counts[c.link_type] || 0) + 1;
+        });
+        const total = Object.values(counts).reduce((a, b) => a + b, 0) || 1;
+        const icons = {
+          instagram: "fab fa-instagram text-pink-500",
+          whatsapp: "fab fa-whatsapp text-green-500",
+          facebook: "fab fa-facebook-f text-blue-600",
+          linkedin: "fab fa-linkedin-in text-blue-700",
+          website: "fas fa-globe text-navy",
+          phone: "fas fa-phone text-gold",
+          twitter: "fab fa-twitter text-sky-500",
+          tiktok: "fab fa-tiktok text-gray-800",
+        };
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        var Contactsaves = counts["save_contact"] || 0;
+        var linkClicks = total - Contactsaves;
+
+        document.getElementById("statSaves").textContent = Contactsaves;
+        document.getElementById("statClicks").textContent = linkClicks;
+        const el = document.getElementById("linkPerformance");
+        if (sorted.length === 0) {
+          el.innerHTML =
+            '<p class="text-xs text-gray-400">No link clicks yet.</p>';
+          return;
+        }
+        el.innerHTML = sorted
+          .map(
+            ([type, count]) => `
+        <div class="flex items-center gap-3">
+            <div class="w-7 h-7 bg-gray-50 rounded-lg flex items-center justify-center"><i class="${icons[type] || "fas fa-link text-gray-400"} text-xs"></i></div>
+            <div class="flex-1">
+                <div class="text-xs font-medium text-navy capitalize">${type}</div>
+                <div class="h-1.5 bg-gray-100 rounded-full mt-1"><div class="h-full bg-navy rounded-full" style="width:${Math.round((count / total) * 100)}%"></div></div>
+            </div>
+            <span class="text-xs font-semibold text-navy">${count}</span>
+        </div>`,
+          )
+          .join("");
+      }
+
+      async function loadRecentMessages() {
+        try {
+          const msgs = await dbSelect(
+            "messages",
+            `?card_user_id=eq.${APP.user.id}&order=created_at.desc&limit=3&select=*`,
+          );
+          const el = document.getElementById("recentMsgList");
+          if (!msgs || msgs.length === 0) {
+            el.innerHTML =
+              '<p class="text-xs text-gray-400">No messages yet.</p>';
+            return;
+          }
+          el.innerHTML = msgs
+            .map(
+              (m) => `
+            <div class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
+                <div class="w-8 h-8 bg-navy rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">${initials(m.sender_name || "?")}</div>
+                <div class="min-w-0">
+                    <div class="text-xs font-semibold text-navy">${m.sender_name || "Anonymous"}</div>
+                    <div class="text-xs text-gray-500 truncate">${m.message || ""}</div>
+                    <div class="text-xs text-gray-400 mt-0.5">${timeAgo(m.created_at)}</div>
+                </div>
+            </div>`,
+            )
+            .join("");
+        } catch (e) {
+          /* silent */
+        }
+      }
+
+      // ── Plan ───────────────────────────────────────────────────
+      function renderPlan() {
+        const p = APP.profile;
+        const hasPlan = p?.plan && p?.plan_status !== "pending";
+        const isPending = p?.plan_status === "pending";
+        document
+          .getElementById("planChooser")
+          .classList.toggle("hidden", hasPlan);
+        document
+          .getElementById("currentPlanView")
+          .classList.toggle("hidden", !hasPlan);
+
+        if (hasPlan) {
+          document.getElementById("currentPlanLabel").textContent =
+            p.plan === "premium"
+              ? "Premium – UGX 120,000"
+              : "Starter – UGX 65,000";
+          const sb = document.getElementById("currentPlanStatus");
+          sb.textContent = p.plan_status === "active" ? "Active" : "Pending";
+          sb.className = `badge mx-auto mb-4 ${p.plan_status === "active" ? "bg-green-50 text-green-600" : "bg-amber-50 text-amber-600"}`;
+          const url = `${window.location.origin}/card/${p.slug}`;
+          const ua = document.getElementById("currentCardUrl");
+          ua.textContent = url;
+          ua.href = url;
+        }
+      }
+
+      function selectPkg(pkg) {
+        APP.selectedPkg = pkg;
+        ["starter", "premium"].forEach((p) => {
+          const card = document.getElementById("pkg-" + p);
+          const radio = document.getElementById("radio-" + p);
+          const dot = document.getElementById("dot-" + p);
+          if (p === pkg) {
+            card.classList.add("selected");
+            radio.style.borderColor = "#C9A84C";
+            dot.style.background = "#C9A84C";
+          } else {
+            card.classList.remove("selected");
+            radio.style.borderColor = "#d1d5db";
+            dot.style.background = "transparent";
+          }
+        });
+        validatePkgForm();
+      }
+
+      function validatePkgForm() {
+        const phone = document.getElementById("contactPhone").value.trim();
+        document.getElementById("submitPkgBtn").disabled = !(
+          phone.length >= 9 && APP.selectedPkg
+        );
+      }
+
+      async function submitPackage() {
+        const phone = document.getElementById("contactPhone").value.trim();
+        const packagePromoCode = document
+          .getElementById("packagePromoCode")
+          .value.trim()
+          .toLowerCase();
+        const pkgError = document.getElementById("pkgError");
+        pkgError.classList.add("hidden");
+
+        if (!phone || !APP.selectedPkg) {
+          pkgError.textContent =
+            "Please select a plan and enter a phone number.";
+          pkgError.classList.remove("hidden");
+          return;
+        }
+
+        const btn = document.getElementById("submitPkgBtn");
+        setLoading(btn, true);
+        try {
+          let referrerId = APP.profile?.referred_by || null;
+          let promoCode = APP.profile?.promo_code || null;
+
+          if (packagePromoCode && !referrerId) {
+            const matches = await dbSelect(
+              "profiles",
+              `?slug=eq.${encodeURIComponent(packagePromoCode)}&select=id,slug`,
+            );
+            if (!matches || matches.length === 0) {
+              pkgError.textContent = "Invalid promo code.";
+              pkgError.classList.remove("hidden");
+              setLoading(btn, false, "Submit Request");
+              return;
+            }
+            referrerId = matches[0].id;
+            promoCode = packagePromoCode;
+            APP.profile.referred_by = referrerId;
+            APP.profile.promo_code = promoCode;
+            await dbUpdate(
+              "profiles",
+              { id: APP.user.id },
+              {
+                referred_by: referrerId,
+                promo_code: promoCode,
+              },
+            );
+          }
+
+          const basePrice = APP.selectedPkg === "premium" ? 120000 : 65000;
+          const hasReferral = !!referrerId;
+          const discount = hasReferral ? Math.round(basePrice * 0.1) : 0;
+          const commission = hasReferral ? Math.round(basePrice * 0.1) : 0;
+          const price = basePrice - discount;
+
+          // Insert order
+          await dbInsert(
+            "orders",
+            {
+              user_id: APP.user.id,
+              plan: APP.selectedPkg,
+              price,
+              contact_phone: phone,
+              status: "pending",
+              referrer_id: referrerId,
+              promo_code: promoCode,
+              discount_amount: discount,
+              commission_amount: commission,
+            },
+            false,
+          );
+
+          let referrerBalance = 0;
+          if (hasReferral) {
+            const refRows = await dbSelect(
+              "profiles",
+              `?id=eq.${referrerId}&select=commission_balance`,
+            );
+            referrerBalance = refRows?.[0]?.commission_balance || 0;
+
+            await dbInsert(
+              "referrals",
+              {
+                user_id: APP.user.id,
+                referrer_id: referrerId,
+                promo_code: promoCode,
+                plan: APP.selectedPkg,
+                price: basePrice,
+                discount_amount: discount,
+                commission_amount: commission,
+                status: "pending",
+              },
+              true,
+            );
+
+            await dbUpdate(
+              "profiles",
+              { id: referrerId },
+              {
+                commission_balance: referrerBalance + commission,
+              },
+            );
+          }
+
+          // Update profile
+          await dbUpdate(
+            "profiles",
+            { id: APP.user.id },
+            {
+              plan: APP.selectedPkg,
+              plan_status: "pending",
+              contact_phone: phone,
+            },
+          );
+          APP.profile.plan = APP.selectedPkg;
+          APP.profile.plan_status = "pending";
+          APP.profile.contact_phone = phone;
+          renderSidebar();
+          showView("overview");
+          showToast(
+            "Package request submitted! We'll contact you within 24 hours.",
+          );
+        } catch (e) {
+          showToast("Failed to submit. Please try again.", "error");
+          setLoading(btn, false, "Submit Request");
+        }
+      }
+
+      // ── Profile Setup ──────────────────────────────────────────
+      function renderProfileForm() {
+        const p = APP.profile;
+        const cp = APP.cardProfile;
+        const locked = p?.plan_status !== "active";
+        document
+          .getElementById("profileLockedBanner")
+          .classList.toggle("hidden", !locked);
+        const isPremium = p?.plan === "premium";
+        document
+          .getElementById("videoStep")
+          .classList.toggle("hidden", !isPremium);
+        document
+          .getElementById("colourStep")
+          .classList.toggle("hidden", !isPremium);
+        document.getElementById("templateStepNum").textContent = isPremium
+          ? "9"
+          : "7";
+        document.getElementById("galleryLimitText").textContent =
+          `Upload up to ${isPremium ? 10 : 5} photos (${isPremium ? "Premium" : "Starter"} plan)`;
+
+        // Populate from DB
+        if (cp) {
+          document.getElementById("profilePhone").value = cp.phone || "";
+          document.getElementById("profFirstName").value =
+            cp.first_name || p?.first_name || "";
+          document.getElementById("profLastName").value =
+            cp.last_name || p?.last_name || "";
+          document.getElementById("profTitle").value = cp.title || "";
+          document.getElementById("profBio").value = cp.bio || "";
+          document.getElementById("profEmail").value = cp.email || "";
+          document.getElementById("profWebsite").value = cp.website || "";
+          document.getElementById("profLocation").value = cp.location || "";
+          document.getElementById("socIg").value = cp.soc_instagram || "";
+          document.getElementById("socFb").value = cp.soc_facebook || "";
+          document.getElementById("socLi").value = cp.soc_linkedin || "";
+          document.getElementById("socWa").value = cp.soc_whatsapp || "";
+          document.getElementById("socTk").value = cp.soc_tiktok || "";
+          document.getElementById("socTw").value = cp.soc_twitter || "";
+          if (isPremium) {
+            // Video preview
+            if (APP.videoUrl) {
+              document.getElementById("videoPreview").innerHTML =
+                `<video src="${APP.videoUrl}" class="w-full h-full object-cover" controls></video>`;
+            }
+            document.getElementById("brandColour").value =
+              cp.brand_colour || "#1B2B4B";
+            document.getElementById("colourPreviewLabel").textContent =
+              cp.brand_colour || "#1B2B4B";
+          }
+          // Avatar
+          if (cp.avatar_url) {
+            document.getElementById("logoPreview").innerHTML =
+              `<img src="${cp.avatar_url}" class="w-full h-full object-cover">`;
+          }
+          // Phone lock
+          if (cp.phone_locked) {
+            document.getElementById("profilePhone").disabled = true;
+            document
+              .getElementById("phoneLockedMsg")
+              .classList.remove("hidden");
+          }
+        }
+
+        // Services
+        renderServiceRows();
+        // Gallery
+        renderGallerySlots();
+        // Templates
+        renderTemplates();
+
+        // Disable all inputs if locked
+        if (locked) {
+          document
+            .querySelectorAll("#view-profile input, #view-profile textarea")
+            .forEach((i) => {
+              i.disabled = true;
+            });
+          document.getElementById("saveProfileBtn").disabled = true;
+        }
+      }
+
+      function renderServiceRows() {
+        const list = document.getElementById("servicesList");
+        list.innerHTML = "";
+        APP.services.forEach((s, i) => {
+          const row = document.createElement("div");
+          row.className = "flex gap-2";
+          row.innerHTML = `<input type="text" class="form-input flex-1" value="${s.name}" data-service-id="${s.id}" placeholder="e.g. Graphic Design"><button onclick="removeServiceRow(this,'${s.id}')" class="text-gray-400 hover:text-red-500 px-2"><i class="fas fa-times text-sm"></i></button>`;
+          list.appendChild(row);
+        });
+        if (APP.services.length === 0) addServiceRow();
+      }
+
+      function addServiceRow() {
+        const list = document.getElementById("servicesList");
+        const row = document.createElement("div");
+        row.className = "flex gap-2";
+        row.innerHTML = `<input type="text" class="form-input flex-1" placeholder="e.g. Web Design"><button onclick="removeServiceRow(this,null)" class="text-gray-400 hover:text-red-500 px-2"><i class="fas fa-times text-sm"></i></button>`;
+        list.appendChild(row);
+      }
+
+      async function removeServiceRow(btn, id) {
+        if (id) {
+          try {
+            await dbDelete("services", { id });
+            APP.services = APP.services.filter((s) => s.id !== id);
+          } catch (e) {
+            showToast("Failed to delete service", "error");
+            return;
+          }
+        }
+        btn.parentElement.remove();
+      }
+
+      function renderGallerySlots() {
+        const isPremium = APP.profile?.plan === "premium";
+        const limit = isPremium ? 10 : 5;
+        const grid = document.getElementById("galleryGrid");
+        grid.innerHTML = "";
+        for (let i = 0; i < limit; i++) {
+          const img = APP.gallery[i];
+          const slot = document.createElement("div");
+          slot.className =
+            "aspect-square rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-50 transition overflow-hidden relative group";
+          if (img) {
+            slot.innerHTML = `<img src="${img.image_url}" class="w-full h-full object-cover"><button onclick="deleteGalleryImage('${img.id}',this)" class="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs items-center justify-center hidden group-hover:flex"><i class="fas fa-times" style="font-size:8px"></i></button>`;
+          } else {
+            slot.innerHTML =
+              '<i class="fas fa-plus text-gray-300 text-lg"></i>';
+            slot.onclick = () =>
+              document.getElementById("galleryInput").click();
+          }
+          grid.appendChild(slot);
+        }
+      }
+
+      async function handleGalleryUpload(e) {
+        if (APP.galleryUploading) return;
+        const isPremium = APP.profile?.plan === "premium";
+        const limit = isPremium ? 10 : 5;
+        const remaining = limit - APP.gallery.length;
+        const files = Array.from(e.target.files).slice(0, remaining);
+        if (!files.length) {
+          showToast(`Gallery full (${limit} max)`, "warn");
+          return;
+        }
+        APP.galleryUploading = true;
+        showToast("Uploading images…", "warn");
+        try {
+          for (const file of files) {
+            const path = `${APP.user.id}/${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+            const url = await uploadFile("gallery", path, file);
+            const rows = await dbInsert(
+              "gallery",
+              {
+                user_id: APP.user.id,
+                image_url: url,
+                sort_order: APP.gallery.length,
+              },
+              false,
+            );
+            if (rows?.[0]) APP.gallery.push(rows[0]);
+          }
+          renderGallerySlots();
+          showToast("Images uploaded!");
+        } catch (err) {
+          showToast("Upload failed. Check file size.", "error");
+        } finally {
+          APP.galleryUploading = false;
+          e.target.value = "";
+        }
+      }
+
+      async function handleVideoUpload(e) {
+        if (APP.videoUploading) return;
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.size > 50 * 1024 * 1024) {
+          showToast("Video too large (max 50MB)", "error");
+          return;
+        }
+        APP.videoUploading = true;
+        showToast("Uploading video…", "warn");
+        try {
+          const path = `${APP.user.id}/video-${Date.now()}.mp4`;
+          const url = await uploadFile("gallery", path, file);
+          APP.videoUrl = url;
+          document.getElementById("videoPreview").innerHTML =
+            `<video src="${url}" class="w-full h-full object-cover" controls></video>`;
+          showToast("Video uploaded!");
+          await dbUpdate(
+            "card_profiles",
+            { user_id: APP.user.id },
+            {
+              video_url: url,
+            },
+          );
+        } catch (err) {
+          showToast("Upload failed.", "error");
+        } finally {
+          APP.videoUploading = false;
+          e.target.value = "";
+        }
+      }
+
+      async function deleteGalleryImage(id, btn) {
+        try {
+          await dbDelete("gallery", { id });
+          APP.gallery = APP.gallery.filter((g) => g.id !== id);
+          renderGallerySlots();
+          showToast("Image removed");
+        } catch {
+          showToast("Delete failed", "error");
+        }
+      }
+
+      async function handleLogoUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        showToast("Uploading logo…", "warn");
+        try {
+          const path = `${APP.user.id}/avatar-${Date.now()}`;
+          const url = await uploadFile("avatars", path, file);
+          document.getElementById("logoPreview").innerHTML =
+            `<img src="${url}" class="w-full h-full object-cover">`;
+          // Save to card_profiles immediately
+          if (APP.cardProfile) {
+            await dbUpdate(
+              "card_profiles",
+              { user_id: APP.user.id },
+              { avatar_url: url },
+            );
+            APP.cardProfile.avatar_url = url;
+          }
+          showToast("Logo uploaded!");
+        } catch {
+          showToast("Upload failed.", "error");
+        }
+      }
+
+      function renderTemplates() {
+        const isPremium = APP.profile?.plan === "premium";
+        const count = isPremium ? 5 : 1;
+        const colors = ["#1B2B4B", "#2D6A4F", "#7B2D8B", "#C9A84C", "#C0392B"];
+        const names = [
+          "Classic Navy",
+          "Forest",
+          "Royal Purple",
+          "Gold",
+          "Crimson",
+        ];
+        const grid = document.getElementById("templatesGrid");
+        grid.innerHTML = "";
+        for (let i = 0; i < count; i++) {
+          const selected = (APP.cardProfile?.template_idx || 0) === i;
+          const t = document.createElement("div");
+          t.className = `relative rounded-xl border-2 cursor-pointer overflow-hidden transition ${selected ? "border-gold" : "border-gray-100"}`;
+          t.style.background = colors[i];
+          t.innerHTML = `<div class="p-3 h-20"><div class="w-8 h-2 bg-white/30 rounded mb-1.5"></div><div class="w-14 h-1.5 bg-white/20 rounded mb-1"></div><div class="w-10 h-1.5 bg-white/20 rounded"></div><div class="text-white/70 absolute bottom-2 left-3 font-medium" style="font-size:10px">${names[i]}</div>${selected ? '<div class="absolute top-2 right-2 w-4 h-4 bg-gold rounded-full flex items-center justify-center"><i class="fas fa-check text-navy" style="font-size:8px"></i></div>' : ""}</div>`;
+          t.onclick = () => {
+            APP.selectedTemplate = i;
+            renderTemplates();
+          };
+          grid.appendChild(t);
+        }
+      }
+
+      async function saveProfile() {
+        const btn = document.getElementById("saveProfileBtn");
+        const cp = APP.cardProfile;
+        const phone = document.getElementById("profilePhone").value.trim();
+
+        // Phone lock check
+        if (phone && !cp?.phone_locked && cp?.phone && cp.phone !== phone) {
+          if (
+            !confirm(
+              "⚠️ IMPORTANT: Your phone number will be locked permanently after saving — it is printed on your physical NFC card. Changing it later costs UGX 20,000. Are you sure this is correct?\n\n" +
+                phone,
+            )
+          )
+            return;
+        }
+
+        setLoading(btn, true);
+        try {
+          const payload = {
+            user_id: APP.user.id,
+            phone: phone,
+            phone_locked: phone ? true : false,
+            first_name: document.getElementById("profFirstName").value.trim(),
+            last_name: document.getElementById("profLastName").value.trim(),
+            title: document.getElementById("profTitle").value.trim(),
+            bio: document.getElementById("profBio").value.trim(),
+            email: document.getElementById("profEmail").value.trim(),
+            website: document.getElementById("profWebsite").value.trim(),
+            location: document.getElementById("profLocation").value.trim(),
+            soc_instagram: document.getElementById("socIg").value.trim(),
+            soc_facebook: document.getElementById("socFb").value.trim(),
+            soc_linkedin: document.getElementById("socLi").value.trim(),
+            soc_whatsapp: document.getElementById("socWa").value.trim(),
+            soc_tiktok: document.getElementById("socTk").value.trim(),
+            soc_twitter: document.getElementById("socTw").value.trim(),
+            template_idx: APP.selectedTemplate,
+            updated_at: new Date().toISOString(),
+          };
+          if (APP.profile?.plan === "premium") {
+            payload.video_url = APP.videoUrl || "";
+            payload.brand_colour = document.getElementById("brandColour").value;
+          }
+
+          // Upsert card_profiles
+          const existing = await dbSelect(
+            "card_profiles",
+            `?user_id=eq.${APP.user.id}&select=id`,
+          );
+          let rows;
+          if (existing && existing.length > 0) {
+            rows = await dbUpdate(
+              "card_profiles",
+              { user_id: APP.user.id },
+              payload,
+            );
+          } else {
+            rows = await dbInsert("card_profiles", payload, false);
+          }
+          APP.cardProfile = rows?.[0] || payload;
+
+          // Save services
+          const serviceInputs = document.querySelectorAll(
+            "#servicesList input[type=text]",
+          );
+          const newServices = [];
+          for (const inp of serviceInputs) {
+            const name = inp.value.trim();
+            if (!name) continue;
+            const existingId = inp.dataset.serviceId;
+            if (existingId) {
+              await dbUpdate("services", { id: existingId }, { name });
+              newServices.push({ id: existingId, name });
+            } else {
+              const row = await dbInsert(
+                "services",
+                { user_id: APP.user.id, name, sort_order: newServices.length },
+                false,
+              );
+              if (row?.[0]) newServices.push(row[0]);
+            }
+          }
+          APP.services = newServices;
+
+          showToast("Profile saved successfully!");
+          if (phone && payload.phone_locked) {
+            document.getElementById("profilePhone").disabled = true;
+            document
+              .getElementById("phoneLockedMsg")
+              .classList.remove("hidden");
+          }
+        } catch (err) {
+          showToast("Save failed: " + err.message, "error");
+        } finally {
+          setLoading(btn, false, "Save Profile");
+        }
+      }
+
+      // ── Analytics ──────────────────────────────────────────────
+      // ── Messages ───────────────────────────────────────────────
+      async function loadMessages() {
+        try {
+          const msgs = await dbSelect(
+            "messages",
+            `?card_user_id=eq.${APP.user.id}&order=created_at.desc&select=*`,
+          );
+          const list = document.getElementById("messagesList");
+          const empty = document.getElementById("noMessages");
+          if (!msgs || msgs.length === 0) {
+            list.innerHTML = "";
+            empty.classList.remove("hidden");
+            return;
+          }
+          empty.classList.add("hidden");
+          list.innerHTML = msgs
+            .map(
+              (m) => `
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 hover:shadow-sm transition">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 bg-navy rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">${initials(m.sender_name || "?")}</div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-semibold text-navy text-sm">${m.sender_name || "Anonymous"}</span>
+                            <span class="text-xs text-gray-400">${timeAgo(m.created_at)}</span>
+                        </div>
+                        <div class="text-xs text-gray-400 mb-2">${m.sender_email || ""} ${m.sender_phone ? "· " + m.sender_phone : ""}</div>
+                        <p class="text-sm text-gray-600">${m.message || ""}</p>
+                        ${!m.read ? '<div class="mt-2"><button onclick="markRead(\'' + m.id + '\',this)" class="text-xs text-gold hover:underline">Mark as read</button></div>' : ""}
+                    </div>
+                </div>
+            </div>`,
+            )
+            .join("");
+          // Mark all as read
+          await dbUpdate(
+            "messages",
+            { card_user_id: APP.user.id },
+            { read: true },
+          );
+          document.getElementById("msgBadge").classList.add("hidden");
+        } catch (e) {
+          showToast("Failed to load messages", "error");
+        }
+      }
+
+      async function markRead(id, btn) {
+        await dbUpdate("messages", { id }, { read: true }).catch(() => {});
+        btn.closest("div").remove();
+      }
+
+      // ── Sidebar helpers ────────────────────────────────────────
+      function openSidebar() {
+        document.getElementById("sidebar").classList.add("open");
+        document.getElementById("overlay").classList.add("show");
+      }
+      function closeSidebar() {
+        document.getElementById("sidebar").classList.remove("open");
+        document.getElementById("overlay").classList.remove("show");
+      }
+
+      boot();
+    </script>
+  </body>
+</html>
