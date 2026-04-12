@@ -95,7 +95,7 @@ async function resetPassword(email) {
   });
   return data;
 }
-alert("For security, password resets are disabled in this demo. Please contact support if you need help accessing your account.");
+
 
 // ── Auth: Update Password ────────────────────────────────────
 async function updatePassword(newPassword) {

@@ -640,12 +640,6 @@
                   class="form-input w-full"
                   oninput="validatePkgForm()"
                 />
-                <input
-                  type="text"
-                  id="packagePromoCode"
-                  placeholder="Promo code (optional)"
-                  class="form-input w-full"
-                />
                 <button
                   onclick="submitPackage()"
                   id="submitPkgBtn"
@@ -1547,10 +1541,6 @@
 
       async function submitPackage() {
         const phone = document.getElementById("contactPhone").value.trim();
-        const packagePromoCode = document
-          .getElementById("packagePromoCode")
-          .value.trim()
-          .toLowerCase();
         const pkgError = document.getElementById("pkgError");
         pkgError.classList.add("hidden");
 
@@ -1564,39 +1554,8 @@
         const btn = document.getElementById("submitPkgBtn");
         setLoading(btn, true);
         try {
-          let referrerId = APP.profile?.referred_by || null;
-          let promoCode = APP.profile?.promo_code || null;
-
-          if (packagePromoCode && !referrerId) {
-            const matches = await dbSelect(
-              "profiles",
-              `?slug=eq.${encodeURIComponent(packagePromoCode)}&select=id,slug`,
-            );
-            if (!matches || matches.length === 0) {
-              pkgError.textContent = "Invalid promo code.";
-              pkgError.classList.remove("hidden");
-              setLoading(btn, false, "Submit Request");
-              return;
-            }
-            referrerId = matches[0].id;
-            promoCode = packagePromoCode;
-            APP.profile.referred_by = referrerId;
-            APP.profile.promo_code = promoCode;
-            await dbUpdate(
-              "profiles",
-              { id: APP.user.id },
-              {
-                referred_by: referrerId,
-                promo_code: promoCode,
-              },
-            );
-          }
-
           const basePrice = APP.selectedPkg === "premium" ? 120000 : 65000;
-          const hasReferral = !!referrerId;
-          const discount = hasReferral ? Math.round(basePrice * 0.1) : 0;
-          const commission = hasReferral ? Math.round(basePrice * 0.1) : 0;
-          const price = basePrice - discount;
+          const price = basePrice;
 
           // Insert order
           await dbInsert(
@@ -1607,45 +1566,9 @@
               price,
               contact_phone: phone,
               status: "pending",
-              referrer_id: referrerId,
-              promo_code: promoCode,
-              discount_amount: discount,
-              commission_amount: commission,
             },
             false,
           );
-
-          let referrerBalance = 0;
-          if (hasReferral) {
-            const refRows = await dbSelect(
-              "profiles",
-              `?id=eq.${referrerId}&select=commission_balance`,
-            );
-            referrerBalance = refRows?.[0]?.commission_balance || 0;
-
-            await dbInsert(
-              "referrals",
-              {
-                user_id: APP.user.id,
-                referrer_id: referrerId,
-                promo_code: promoCode,
-                plan: APP.selectedPkg,
-                price: basePrice,
-                discount_amount: discount,
-                commission_amount: commission,
-                status: "pending",
-              },
-              true,
-            );
-
-            await dbUpdate(
-              "profiles",
-              { id: referrerId },
-              {
-                commission_balance: referrerBalance + commission,
-              },
-            );
-          }
 
           // Update profile
           await dbUpdate(

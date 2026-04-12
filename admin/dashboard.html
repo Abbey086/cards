@@ -224,13 +224,6 @@
             >0</span
           >
         </div>
-        <div
-          class="nav-link"
-          onclick="showSection('affiliates')"
-          id="nav-affiliates"
-        >
-          <i class="fas fa-hand-holding-dollar w-4 text-center"></i> Affiliates
-        </div>
         <div class="nav-link" onclick="showSection('users')" id="nav-users">
           <i class="fas fa-users w-4 text-center"></i> Users
         </div>
@@ -445,110 +438,6 @@
           </div>
         </div>
 
-        <!-- ====== AFFILIATES ====== -->
-        <div id="section-affiliates" class="hidden">
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
-            <div class="flex gap-2">
-              <button
-                onclick="setAffiliateFilter('all')"
-                class="filter-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-navy text-white"
-                data-filter="all"
-                data-section="affiliates"
-              >
-                All
-              </button>
-              <button
-                onclick="setAffiliateFilter('pending')"
-                class="filter-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600"
-                data-filter="pending"
-                data-section="affiliates"
-              >
-                Pending
-              </button>
-              <button
-                onclick="setAffiliateFilter('paid')"
-                class="filter-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600"
-                data-filter="paid"
-                data-section="affiliates"
-              >
-                Paid
-              </button>
-            </div>
-            <input
-              type="text"
-              id="affiliateSearch"
-              placeholder="Search promo or ID…"
-              oninput="renderAffiliatesTable()"
-              class="border border-gray-200 rounded-xl px-3 py-2 text-xs outline-none focus:border-navy/30 w-44"
-            />
-          </div>
-          <div
-            class="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-5"
-          >
-            <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="bg-gray-50 rounded-2xl p-4">
-                <div class="text-xs text-gray-400">Total Referrals</div>
-                <div
-                  class="font-display text-2xl font-bold text-navy"
-                  id="affiliateTotalCount"
-                >
-                  —
-                </div>
-              </div>
-              <div class="bg-gray-50 rounded-2xl p-4">
-                <div class="text-xs text-gray-400">Total Commission</div>
-                <div
-                  class="font-display text-2xl font-bold text-navy"
-                  id="affiliateTotalCommission"
-                >
-                  —
-                </div>
-              </div>
-              <div class="bg-gray-50 rounded-2xl p-4">
-                <div class="text-xs text-gray-400">Pending Commission</div>
-                <div
-                  class="font-display text-2xl font-bold text-navy"
-                  id="affiliatePendingCommission"
-                >
-                  —
-                </div>
-              </div>
-            </div>
-          </div>
-          <div
-            class="bg-white rounded-2xl border border-gray-100 overflow-hidden"
-          >
-            <div class="overflow-x-auto">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Referral ID</th>
-                    <th>User ID</th>
-                    <th>Referrer ID</th>
-                    <th>Promo Code</th>
-                    <th>Plan</th>
-                    <th>Price</th>
-                    <th>Discount</th>
-                    <th>Commission</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody id="affiliatesBody">
-                  <tr>
-                    <td
-                      colspan="10"
-                      class="text-center py-8 text-gray-400 text-sm"
-                    >
-                      Loading affiliates…
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
         <!-- ====== USERS ====== -->
         <div id="section-users" class="hidden">
           <div
@@ -671,9 +560,7 @@
       // ── State ──────────────────────────────────────────────────
       let ADMIN = {
         orders: [],
-        affiliates: [],
         orderFilter: "all",
-        affiliatesFilter: "all",
         pendingActivation: null,
         currentQRUser: null,
       };
@@ -687,24 +574,20 @@
 
       // ── Section routing ────────────────────────────────────────
       function showSection(sec) {
-        ["overview", "orders", "affiliates", "users", "messages"].forEach(
-          (s) => {
-            document
-              .getElementById("section-" + s)
-              .classList.toggle("hidden", s !== sec);
-            const n = document.getElementById("nav-" + s);
-            if (n) n.classList.toggle("active", s === sec);
-          },
-        );
+        ["overview", "orders", "users", "messages"].forEach((s) => {
+          document
+            .getElementById("section-" + s)
+            .classList.toggle("hidden", s !== sec);
+          const n = document.getElementById("nav-" + s);
+          if (n) n.classList.toggle("active", s === sec);
+        });
         document.getElementById("sectionTitle").textContent = {
           overview: "Admin Overview",
           orders: "Orders",
-          affiliates: "Affiliates",
           users: "Users",
           messages: "Messages",
         }[sec];
         if (sec === "orders") loadOrders();
-        else if (sec === "affiliates") loadAffiliates();
         else if (sec === "users") loadUsers();
         else if (sec === "messages") loadAdminMessages();
       }
@@ -846,17 +729,6 @@
         renderOrdersTable();
       }
 
-      function setAffiliateFilter(f) {
-        ADMIN.affiliatesFilter = f;
-        document
-          .querySelectorAll('.filter-btn[data-section="affiliates"]')
-          .forEach((b) => {
-            const active = b.dataset.filter === f;
-            b.className = `filter-btn text-xs font-semibold px-3 py-1.5 rounded-lg ${active ? "bg-navy text-white" : "bg-gray-100 text-gray-600"}`;
-          });
-        renderAffiliatesTable();
-      }
-
       function renderOrdersTable() {
         const search = (
           document.getElementById("orderSearch")?.value || ""
@@ -901,79 +773,6 @@
             <td class="text-gray-400 text-xs">${formatDate(o.created_at)}</td>
         </tr>`;
           })
-          .join("");
-      }
-
-      // ── Affiliates ─────────────────────────────────────────────
-      async function loadAffiliates() {
-        try {
-          const data = await sbFetch(
-            `/rest/v1/referrals?select=id,user_id,referrer_id,promo_code,plan,price,discount_amount,commission_amount,status,created_at&order=created_at.desc`,
-          );
-          ADMIN.affiliates = data || [];
-          renderAffiliatesTable();
-        } catch (e) {
-          showToast("Failed to load affiliates", "error");
-        }
-      }
-
-      function renderAffiliatesTable() {
-        const search = (
-          document.getElementById("affiliateSearch")?.value || ""
-        ).toLowerCase();
-        let data = ADMIN.affiliates
-          .filter((r) => {
-            if (ADMIN.affiliatesFilter === "pending")
-              return r.status === "pending";
-            if (ADMIN.affiliatesFilter === "paid") return r.status === "paid";
-            return true;
-          })
-          .filter((r) => {
-            return (
-              (r.id || "").toLowerCase().includes(search) ||
-              (r.promo_code || "").toLowerCase().includes(search) ||
-              (r.user_id || "").toLowerCase().includes(search) ||
-              (r.referrer_id || "").toLowerCase().includes(search)
-            );
-          });
-
-        const total = data.length;
-        const totalCommission = data.reduce(
-          (sum, r) => sum + (r.commission_amount || 0),
-          0,
-        );
-        const pendingCommission = data
-          .filter((r) => r.status === "pending")
-          .reduce((sum, r) => sum + (r.commission_amount || 0), 0);
-        document.getElementById("affiliateTotalCount").textContent =
-          total.toLocaleString();
-        document.getElementById("affiliateTotalCommission").textContent =
-          totalCommission.toLocaleString();
-        document.getElementById("affiliatePendingCommission").textContent =
-          pendingCommission.toLocaleString();
-
-        const body = document.getElementById("affiliatesBody");
-        if (!data.length) {
-          body.innerHTML =
-            '<tr><td colspan="10" class="text-center py-8 text-gray-400 text-sm">No affiliate records found.</td></tr>';
-          return;
-        }
-
-        body.innerHTML = data
-          .map(
-            (r) => `<tr>
-            <td class="text-xs text-gray-600 font-mono">${r.id || "—"}</td>
-            <td class="text-xs text-gray-600 font-mono">${r.user_id || "—"}</td>
-            <td class="text-xs text-gray-600 font-mono">${r.referrer_id || "—"}</td>
-            <td class="text-gray-600 text-xs">${r.promo_code || "—"}</td>
-            <td class="text-gray-600 text-xs">${r.plan || "—"}</td>
-            <td class="text-gray-600 text-xs">UGX ${r.price?.toLocaleString() || "0"}</td>
-            <td class="text-gray-600 text-xs">UGX ${r.discount_amount?.toLocaleString() || "0"}</td>
-            <td class="text-gray-600 text-xs">UGX ${r.commission_amount?.toLocaleString() || "0"}</td>
-            <td><span class="badge ${r.status === "paid" ? "bg-green-50 text-green-600" : "bg-amber-50 text-amber-600"}">${r.status || "—"}</span></td>
-            <td class="text-gray-400 text-xs">${formatDate(r.created_at)}</td>
-        </tr>`,
-          )
           .join("");
       }
 
