@@ -229,6 +229,13 @@
         </div>
         <div
           class="nav-link"
+          onclick="showSection('affiliates')"
+          id="nav-affiliates"
+        >
+          <i class="fas fa-hand-holding-dollar w-4 text-center"></i> Affiliates
+        </div>
+        <div
+          class="nav-link"
           onclick="showSection('messages')"
           id="nav-messages"
         >
@@ -438,6 +445,119 @@
           </div>
         </div>
 
+        <!-- ====== AFFILIATES ====== -->
+        <div id="section-affiliates" class="hidden">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div class="flex gap-2">
+              <button
+                onclick="setAffiliateFilter('all')"
+                class="filter-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-navy text-white"
+                data-filter="all"
+                data-section="affiliates"
+              >
+                All
+              </button>
+              <button
+                onclick="setAffiliateFilter('active')"
+                class="filter-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600"
+                data-filter="active"
+                data-section="affiliates"
+              >
+                Active
+              </button>
+              <button
+                onclick="setAffiliateFilter('inactive')"
+                class="filter-btn text-xs font-semibold px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600"
+                data-filter="inactive"
+                data-section="affiliates"
+              >
+                Inactive
+              </button>
+            </div>
+            <button
+              onclick="showCreateAffiliateModal()"
+              class="gold-gradient text-navy font-bold px-4 py-2 rounded-xl text-sm hover:opacity-90 transition"
+            >
+              <i class="fas fa-plus mr-2"></i> Add Affiliate
+            </button>
+          </div>
+          <div
+            class="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-5"
+          >
+            <div class="p-5 grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div class="bg-gray-50 rounded-2xl p-4">
+                <div class="text-xs text-gray-400">Total Affiliates</div>
+                <div
+                  class="font-display text-2xl font-bold text-navy"
+                  id="affiliateTotalCount"
+                >
+                  —
+                </div>
+              </div>
+              <div class="bg-gray-50 rounded-2xl p-4">
+                <div class="text-xs text-gray-400">Total Referrals</div>
+                <div
+                  class="font-display text-2xl font-bold text-navy"
+                  id="affiliateTotalReferrals"
+                >
+                  —
+                </div>
+              </div>
+              <div class="bg-gray-50 rounded-2xl p-4">
+                <div class="text-xs text-gray-400">Total Commission</div>
+                <div
+                  class="font-display text-2xl font-bold text-navy"
+                  id="affiliateTotalCommission"
+                >
+                  —
+                </div>
+              </div>
+              <div class="bg-gray-50 rounded-2xl p-4">
+                <div class="text-xs text-gray-400">Pending Commission</div>
+                <div
+                  class="font-display text-2xl font-bold text-navy"
+                  id="affiliatePendingCommission"
+                >
+                  —
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="bg-white rounded-2xl border border-gray-100 overflow-hidden"
+          >
+            <div class="overflow-x-auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Promo Code</th>
+                    <th>Commission (Starter)</th>
+                    <th>Commission (Premium)</th>
+                    <th>Discount (Starter)</th>
+                    <th>Discount (Premium)</th>
+                    <th>Referrals</th>
+                    <th>Earnings</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="affiliatesBody">
+                  <tr>
+                    <td
+                      colspan="11"
+                      class="text-center py-8 text-gray-400 text-sm"
+                    >
+                      Loading affiliates…
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <!-- ====== USERS ====== -->
         <div id="section-users" class="hidden">
           <div
@@ -556,11 +676,127 @@
       </div>
     </div>
 
+    <!-- CREATE AFFILIATE MODAL -->
+    <div class="modal" id="createAffiliateModal">
+      <div class="bg-white rounded-3xl p-7 max-w-md w-full shadow-2xl">
+        <h3 class="font-display font-bold text-navy text-lg mb-4">
+          Create Affiliate
+        </h3>
+        <form onsubmit="createAffiliate(event)">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >First Name</label
+              >
+              <input
+                type="text"
+                id="affiliateFirstName"
+                class="form-input"
+                required
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Last Name</label
+              >
+              <input
+                type="text"
+                id="affiliateLastName"
+                class="form-input"
+                required
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Email</label
+              >
+              <input
+                type="email"
+                id="affiliateEmail"
+                class="form-input"
+                required
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >Commission (Starter)</label
+                >
+                <input
+                  type="number"
+                  id="commissionStarter"
+                  class="form-input"
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >Commission (Premium)</label
+                >
+                <input
+                  type="number"
+                  id="commissionPremium"
+                  class="form-input"
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >Discount (Starter)</label
+                >
+                <input
+                  type="number"
+                  id="discountStarter"
+                  class="form-input"
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >Discount (Premium)</label
+                >
+                <input
+                  type="number"
+                  id="discountPremium"
+                  class="form-input"
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-3 mt-6">
+            <button
+              type="submit"
+              id="createAffiliateBtn"
+              class="flex-1 gold-gradient text-navy font-bold py-2.5 rounded-xl text-sm hover:opacity-90 transition"
+            >
+              Create Affiliate
+            </button>
+            <button
+              type="button"
+              onclick="closeModal('createAffiliateModal')"
+              class="flex-1 border border-gray-200 text-gray-600 font-medium py-2.5 rounded-xl text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <script>
       // ── State ──────────────────────────────────────────────────
       let ADMIN = {
         orders: [],
+        affiliates: [],
         orderFilter: "all",
+        affiliateFilter: "all",
         pendingActivation: null,
         currentQRUser: null,
       };
@@ -574,7 +810,7 @@
 
       // ── Section routing ────────────────────────────────────────
       function showSection(sec) {
-        ["overview", "orders", "users", "messages"].forEach((s) => {
+        ["overview", "orders", "affiliates", "users", "messages"].forEach((s) => {
           document
             .getElementById("section-" + s)
             .classList.toggle("hidden", s !== sec);
@@ -584,10 +820,12 @@
         document.getElementById("sectionTitle").textContent = {
           overview: "Admin Overview",
           orders: "Orders",
+          affiliates: "Affiliates",
           users: "Users",
           messages: "Messages",
         }[sec];
         if (sec === "orders") loadOrders();
+        else if (sec === "affiliates") loadAffiliates();
         else if (sec === "users") loadUsers();
         else if (sec === "messages") loadAdminMessages();
       }
@@ -822,6 +1060,31 @@
           ),
           dbUpdate("profiles", { id: userId }, { plan_status: newStatus }),
         ]);
+
+        // Handle affiliate commission if order is activated
+        if (newStatus === "active") {
+          const order = ADMIN.orders.find((o) => o.id === orderId);
+          if (order && order.affiliate_id) {
+            try {
+              // Get affiliate commission rates
+              const affiliates = await sbFetch(`/rest/v1/affiliates?id=eq.${order.affiliate_id}&select=commission_starter,commission_premium,pending_earnings`);
+              if (affiliates && affiliates.length > 0) {
+                const affiliate = affiliates[0];
+                const commission = order.plan === "premium" ? affiliate.commission_premium : affiliate.commission_starter;
+                const newPendingEarnings = (affiliate.pending_earnings || 0) + commission;
+
+                // Update affiliate earnings
+                await dbUpdate("affiliates", { id: order.affiliate_id }, {
+                  pending_earnings: newPendingEarnings,
+                  updated_at: new Date().toISOString()
+                });
+              }
+            } catch (e) {
+              console.error("Failed to update affiliate commission:", e);
+            }
+          }
+        }
+
         const order = ADMIN.orders.find((o) => o.id === orderId);
         if (order) order.status = newStatus;
         renderOrdersTable();
@@ -1000,6 +1263,162 @@
         } catch (e) {
           showToast("Failed to load messages: " + e.message, "error");
         }
+      }
+
+      }
+
+      // ── Affiliates ─────────────────────────────────────────────
+      async function loadAffiliates() {
+        try {
+          const data = await sbFetch(`/rest/v1/affiliates?select=*&order=created_at.desc`);
+          ADMIN.affiliates = data || [];
+          renderAffiliatesTable();
+        } catch (e) {
+          showToast("Failed to load affiliates", "error");
+        }
+      }
+
+      function setAffiliateFilter(f) {
+        ADMIN.affiliateFilter = f;
+        document.querySelectorAll('.filter-btn[data-section="affiliates"]').forEach((b) => {
+          const active = b.dataset.filter === f;
+          b.className = `filter-btn text-xs font-semibold px-3 py-1.5 rounded-lg ${active ? "bg-navy text-white" : "bg-gray-100 text-gray-600"}`;
+        });
+        renderAffiliatesTable();
+      }
+
+      function renderAffiliatesTable() {
+        let data = ADMIN.affiliates.filter((a) => {
+          if (ADMIN.affiliateFilter === "active") return a.status === "active";
+          if (ADMIN.affiliateFilter === "inactive") return a.status === "inactive";
+          return true;
+        });
+
+        // Calculate metrics
+        const metricsPromises = data.map(async (a) => {
+          try {
+            const orders = await sbFetch(`/rest/v1/orders?affiliate_id=eq.${a.id}&select=id,status`);
+            const totalReferrals = orders ? orders.length : 0;
+            const activeReferrals = orders ? orders.filter(o => o.status === 'active').length : 0;
+            return { ...a, total_referrals: totalReferrals, active_referrals: activeReferrals };
+          } catch (e) {
+            return { ...a, total_referrals: 0, active_referrals: 0 };
+          }
+        });
+
+        Promise.all(metricsPromises).then((affiliatesWithMetrics) => {
+          const totalAffiliates = affiliatesWithMetrics.length;
+          const totalReferrals = affiliatesWithMetrics.reduce((sum, a) => sum + (a.total_referrals || 0), 0);
+          const totalCommission = affiliatesWithMetrics.reduce((sum, a) => sum + (a.total_earnings || 0), 0);
+          const pendingCommission = affiliatesWithMetrics.reduce((sum, a) => sum + (a.pending_earnings || 0), 0);
+
+          document.getElementById("affiliateTotalCount").textContent = totalAffiliates.toLocaleString();
+          document.getElementById("affiliateTotalReferrals").textContent = totalReferrals.toLocaleString();
+          document.getElementById("affiliateTotalCommission").textContent = `UGX ${totalCommission.toLocaleString()}`;
+          document.getElementById("affiliatePendingCommission").textContent = `UGX ${pendingCommission.toLocaleString()}`;
+
+          const body = document.getElementById("affiliatesBody");
+          if (!affiliatesWithMetrics.length) {
+            body.innerHTML = '<tr><td colspan="11" class="text-center py-8 text-gray-400 text-sm">No affiliates found.</td></tr>';
+            return;
+          }
+
+          body.innerHTML = affiliatesWithMetrics.map((a) => {
+            const name = `${a.first_name} ${a.last_name}`;
+            return `<tr>
+              <td class="font-medium text-navy">${name}</td>
+              <td class="text-gray-500 text-xs">${a.email}</td>
+              <td class="font-mono text-xs text-navy">${a.slug}</td>
+              <td class="text-xs">UGX ${a.commission_starter?.toLocaleString() || 0}</td>
+              <td class="text-xs">UGX ${a.commission_premium?.toLocaleString() || 0}</td>
+              <td class="text-xs">UGX ${a.discount_starter?.toLocaleString() || 0}</td>
+              <td class="text-xs">UGX ${a.discount_premium?.toLocaleString() || 0}</td>
+              <td class="font-semibold text-navy">${a.total_referrals || 0}</td>
+              <td class="font-semibold text-navy">UGX ${(a.total_earnings || 0).toLocaleString()}</td>
+              <td><span class="badge ${a.status === "active" ? "bg-green-50 text-green-600" : "bg-gray-50 text-gray-600"}">${a.status}</span></td>
+              <td>
+                <div class="flex items-center gap-2">
+                  <button onclick="toggleAffiliateStatus('${a.id}', '${a.status}')" class="text-xs text-gray-400 hover:text-navy" title="Toggle Status">
+                    <i class="fas fa-${a.status === 'active' ? 'pause' : 'play'}"></i>
+                  </button>
+                  <button onclick="editAffiliate('${a.id}')" class="text-xs text-gray-400 hover:text-navy" title="Edit">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>`;
+          }).join("");
+        }).catch((e) => {
+          console.error("Failed to load affiliate metrics:", e);
+        });
+      }
+
+      function showCreateAffiliateModal() {
+        document.getElementById("affiliateFirstName").value = "";
+        document.getElementById("affiliateLastName").value = "";
+        document.getElementById("affiliateEmail").value = "";
+        document.getElementById("commissionStarter").value = "";
+        document.getElementById("commissionPremium").value = "";
+        document.getElementById("discountStarter").value = "";
+        document.getElementById("discountPremium").value = "";
+        document.getElementById("createAffiliateModal").classList.add("show");
+      }
+
+      async function createAffiliate(e) {
+        e.preventDefault();
+        const btn = document.getElementById("createAffiliateBtn");
+        setLoading(btn, true);
+
+        const firstName = document.getElementById("affiliateFirstName").value.trim();
+        const lastName = document.getElementById("affiliateLastName").value.trim();
+        const email = document.getElementById("affiliateEmail").value.trim();
+        const commissionStarter = parseInt(document.getElementById("commissionStarter").value) || 0;
+        const commissionPremium = parseInt(document.getElementById("commissionPremium").value) || 0;
+        const discountStarter = parseInt(document.getElementById("discountStarter").value) || 0;
+        const discountPremium = parseInt(document.getElementById("discountPremium").value) || 0;
+
+        const slug = `${firstName}-${lastName}-${Date.now()}`.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+        try {
+          // Create affiliate record
+          await dbInsert("affiliates", {
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            slug: slug,
+            commission_starter: commissionStarter,
+            commission_premium: commissionPremium,
+            discount_starter: discountStarter,
+            discount_premium: discountPremium,
+            password_set: false,
+          });
+
+          // TODO: Create Supabase auth user with temporary password
+          // For now, affiliate will need to be created manually in auth
+
+          showToast("Affiliate created successfully");
+          closeModal("createAffiliateModal");
+          loadAffiliates();
+        } catch (err) {
+          showToast("Failed to create affiliate: " + err.message, "error");
+          setLoading(btn, false, "Create Affiliate");
+        }
+      }
+
+      async function toggleAffiliateStatus(id, currentStatus) {
+        const newStatus = currentStatus === "active" ? "inactive" : "active";
+        try {
+          await dbUpdate("affiliates", { id }, { status: newStatus });
+          showToast(`Affiliate ${newStatus === "active" ? "activated" : "deactivated"}`);
+          loadAffiliates();
+        } catch (err) {
+          showToast("Failed to update affiliate status", "error");
+        }
+      }
+
+      function editAffiliate(id) {
+        // TODO: Implement edit functionality
+        showToast("Edit functionality coming soon");
       }
 
       function closeModal(id) {

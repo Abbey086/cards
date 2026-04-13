@@ -1541,6 +1541,10 @@
 
       async function submitPackage() {
         const phone = document.getElementById("contactPhone").value.trim();
+        const packagePromoCode = document
+          .getElementById("packagePromoCode")
+          .value.trim()
+          .toLowerCase();
         const pkgError = document.getElementById("pkgError");
         pkgError.classList.add("hidden");
 
@@ -1554,8 +1558,41 @@
         const btn = document.getElementById("submitPkgBtn");
         setLoading(btn, true);
         try {
+          let affiliateId = null;
+          let promoCode = null;
+          let affiliateDiscount = 0;
+
+          if (packagePromoCode) {
+            const affiliates = await dbSelect(
+              "affiliates",
+              `?slug=eq.${encodeURIComponent(packagePromoCode)}&status=eq.active&select=id,slug,discount_starter,discount_premium`,
+            );
+            if (!affiliates || affiliates.length === 0) {
+              pkgError.textContent = "Invalid promo code.";
+              pkgError.classList.remove("hidden");
+              setLoading(btn, false, "Submit Request");
+              return;
+            }
+            affiliateId = affiliates[0].id;
+            promoCode = packagePromoCode;
+            affiliateDiscount =
+              APP.selectedPkg === "premium"
+                ? affiliates[0].discount_premium
+                : affiliates[0].discount_starter;
+            APP.profile.affiliate_id = affiliateId;
+            APP.profile.promo_code = promoCode;
+            await dbUpdate(
+              "profiles",
+              { id: APP.user.id },
+              {
+                affiliate_id: affiliateId,
+                promo_code: promoCode,
+              },
+            );
+          }
+
           const basePrice = APP.selectedPkg === "premium" ? 120000 : 65000;
-          const price = basePrice;
+          const price = basePrice - affiliateDiscount;
 
           // Insert order
           await dbInsert(
@@ -1566,6 +1603,8 @@
               price,
               contact_phone: phone,
               status: "pending",
+              affiliate_id: affiliateId,
+              affiliate_discount: affiliateDiscount,
             },
             false,
           );
@@ -1586,7 +1625,9 @@
           renderSidebar();
           showView("overview");
           showToast(
-            "Package request submitted! We'll contact you within 24 hours.",
+            affiliateDiscount > 0
+              ? `Package request submitted! You saved UGX ${affiliateDiscount.toLocaleString()}.`
+              : "Package request submitted! We'll contact you within 24 hours.",
           );
         } catch (e) {
           showToast("Failed to submit. Please try again.", "error");

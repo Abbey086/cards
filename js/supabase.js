@@ -56,6 +56,16 @@ function getUser() {
 function isAdmin() {
   return getUser()?.email === ADMIN_EMAIL;
 }
+async function isAffiliate() {
+  const user = getUser();
+  if (!user) return false;
+  try {
+    const affiliates = await dbSelect("affiliates", `?email=eq.${user.email}`);
+    return affiliates && affiliates.length > 0;
+  } catch {
+    return false;
+  }
+}
 function saveSession(data) {
   localStorage.setItem("ac_session", JSON.stringify(data));
 }
@@ -95,7 +105,6 @@ async function resetPassword(email) {
   });
   return data;
 }
-
 
 // ── Auth: Update Password ────────────────────────────────────
 async function updatePassword(newPassword) {

@@ -148,6 +148,17 @@
           </div>
           <div>
             <label class="block text-xs text-blue-200/60 font-medium mb-1.5"
+              >Referral / Promo Code (optional)</label
+            >
+            <input
+              type="text"
+              id="promoCode"
+              placeholder="Enter promo code"
+              class="glass-input"
+            />
+          </div>
+          <div>
+            <label class="block text-xs text-blue-200/60 font-medium mb-1.5"
               >Password</label
             >
             <div class="relative">
@@ -244,6 +255,10 @@
         const firstName = document.getElementById("firstName").value.trim();
         const lastName = document.getElementById("lastName").value.trim();
         const email = document.getElementById("email").value.trim();
+        const promoCode = document
+          .getElementById("promoCode")
+          .value.trim()
+          .toLowerCase();
         const password = document.getElementById("password").value;
         const confirm = document.getElementById("confirmPwd").value;
         const errEl = document.getElementById("signupError");
@@ -253,6 +268,26 @@
           errEl.textContent = "Passwords do not match.";
           errEl.classList.remove("hidden");
           return;
+        }
+
+        let affiliateId = null;
+        if (promoCode) {
+          try {
+            const affiliates = await dbSelect(
+              "affiliates",
+              `?slug=eq.${encodeURIComponent(promoCode)}&status=eq.active&select=id,slug`,
+            );
+            if (!affiliates || affiliates.length === 0) {
+              errEl.textContent = "Invalid promo code.";
+              errEl.classList.remove("hidden");
+              return;
+            }
+            affiliateId = affiliates[0].id;
+          } catch (err) {
+            errEl.textContent = "Unable to validate promo code.";
+            errEl.classList.remove("hidden");
+            return;
+          }
         }
 
         setLoading(btn, true);
@@ -279,6 +314,8 @@
                 last_name: lastName,
                 email: email,
                 slug: userSlug,
+                affiliate_id: affiliateId,
+                promo_code: promoCode || null,
               },
               true,
             );
