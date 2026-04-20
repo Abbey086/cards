@@ -36,6 +36,18 @@
         font-family: "DM Sans", sans-serif;
         background: #f4f6fa;
       }
+      .form-input {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        color: #111827;
+        transition: all 0.2s;
+        width: 100%;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: "DM Sans", sans-serif;
+        outline: none;
+      }
       .font-display {
         font-family: "Sora", sans-serif;
       }
@@ -684,27 +696,29 @@
         </h3>
         <form onsubmit="createAffiliate(event)">
           <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >First Name</label
-              >
-              <input
-                type="text"
-                id="affiliateFirstName"
-                class="form-input"
-                required
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Last Name</label
-              >
-              <input
-                type="text"
-                id="affiliateLastName"
-                class="form-input"
-                required
-              />
+            <div class="flex gap-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >First Name</label
+                >
+                <input
+                  type="text"
+                  id="affiliateFirstName"
+                  class="form-input"
+                  required
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                  >Last Name</label
+                >
+                <input
+                  type="text"
+                  id="affiliateLastName"
+                  class="form-input"
+                  required
+                />
+              </div>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1"
@@ -713,7 +727,18 @@
               <input
                 type="email"
                 id="affiliateEmail"
-                class="form-input"
+                class="form-input w-full p-2 rounded"
+                required
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Promo Code</label
+              >
+              <input
+                type="text"
+                id="affiliatePromoCode"
+                class="form-input w-full p-2 rounded"
                 required
               />
             </div>
@@ -799,6 +824,7 @@
         affiliateFilter: "all",
         pendingActivation: null,
         currentQRUser: null,
+        editingAffiliateId: null,
       };
 
       // ── Boot ───────────────────────────────────────────────────
@@ -810,13 +836,15 @@
 
       // ── Section routing ────────────────────────────────────────
       function showSection(sec) {
-        ["overview", "orders", "affiliates", "users", "messages"].forEach((s) => {
-          document
-            .getElementById("section-" + s)
-            .classList.toggle("hidden", s !== sec);
-          const n = document.getElementById("nav-" + s);
-          if (n) n.classList.toggle("active", s === sec);
-        });
+        ["overview", "orders", "affiliates", "users", "messages"].forEach(
+          (s) => {
+            document
+              .getElementById("section-" + s)
+              .classList.toggle("hidden", s !== sec);
+            const n = document.getElementById("nav-" + s);
+            if (n) n.classList.toggle("active", s === sec);
+          },
+        );
         document.getElementById("sectionTitle").textContent = {
           overview: "Admin Overview",
           orders: "Orders",
@@ -1067,17 +1095,27 @@
           if (order && order.affiliate_id) {
             try {
               // Get affiliate commission rates
-              const affiliates = await sbFetch(`/rest/v1/affiliates?id=eq.${order.affiliate_id}&select=commission_starter,commission_premium,pending_earnings`);
+              const affiliates = await sbFetch(
+                `/rest/v1/affiliates?id=eq.${order.affiliate_id}&select=commission_starter,commission_premium,pending_earnings`,
+              );
               if (affiliates && affiliates.length > 0) {
                 const affiliate = affiliates[0];
-                const commission = order.plan === "premium" ? affiliate.commission_premium : affiliate.commission_starter;
-                const newPendingEarnings = (affiliate.pending_earnings || 0) + commission;
+                const commission =
+                  order.plan === "premium"
+                    ? affiliate.commission_premium
+                    : affiliate.commission_starter;
+                const newPendingEarnings =
+                  (affiliate.pending_earnings || 0) + commission;
 
                 // Update affiliate earnings
-                await dbUpdate("affiliates", { id: order.affiliate_id }, {
-                  pending_earnings: newPendingEarnings,
-                  updated_at: new Date().toISOString()
-                });
+                await dbUpdate(
+                  "affiliates",
+                  { id: order.affiliate_id },
+                  {
+                    pending_earnings: newPendingEarnings,
+                    updated_at: new Date().toISOString(),
+                  },
+                );
               }
             } catch (e) {
               console.error("Failed to update affiliate commission:", e);
@@ -1265,12 +1303,12 @@
         }
       }
 
-      }
-
       // ── Affiliates ─────────────────────────────────────────────
       async function loadAffiliates() {
         try {
-          const data = await sbFetch(`/rest/v1/affiliates?select=*&order=created_at.desc`);
+          const data = await sbFetch(
+            `/rest/v1/affiliates?select=*&order=created_at.desc`,
+          );
           ADMIN.affiliates = data || [];
           renderAffiliatesTable();
         } catch (e) {
@@ -1280,52 +1318,79 @@
 
       function setAffiliateFilter(f) {
         ADMIN.affiliateFilter = f;
-        document.querySelectorAll('.filter-btn[data-section="affiliates"]').forEach((b) => {
-          const active = b.dataset.filter === f;
-          b.className = `filter-btn text-xs font-semibold px-3 py-1.5 rounded-lg ${active ? "bg-navy text-white" : "bg-gray-100 text-gray-600"}`;
-        });
+        document
+          .querySelectorAll('.filter-btn[data-section="affiliates"]')
+          .forEach((b) => {
+            const active = b.dataset.filter === f;
+            b.className = `filter-btn text-xs font-semibold px-3 py-1.5 rounded-lg ${active ? "bg-navy text-white" : "bg-gray-100 text-gray-600"}`;
+          });
         renderAffiliatesTable();
       }
 
       function renderAffiliatesTable() {
         let data = ADMIN.affiliates.filter((a) => {
           if (ADMIN.affiliateFilter === "active") return a.status === "active";
-          if (ADMIN.affiliateFilter === "inactive") return a.status === "inactive";
+          if (ADMIN.affiliateFilter === "inactive")
+            return a.status === "inactive";
           return true;
         });
 
         // Calculate metrics
         const metricsPromises = data.map(async (a) => {
           try {
-            const orders = await sbFetch(`/rest/v1/orders?affiliate_id=eq.${a.id}&select=id,status`);
+            const orders = await sbFetch(
+              `/rest/v1/orders?affiliate_id=eq.${a.id}&select=id,status`,
+            );
             const totalReferrals = orders ? orders.length : 0;
-            const activeReferrals = orders ? orders.filter(o => o.status === 'active').length : 0;
-            return { ...a, total_referrals: totalReferrals, active_referrals: activeReferrals };
+            const activeReferrals = orders
+              ? orders.filter((o) => o.status === "active").length
+              : 0;
+            return {
+              ...a,
+              total_referrals: totalReferrals,
+              active_referrals: activeReferrals,
+            };
           } catch (e) {
             return { ...a, total_referrals: 0, active_referrals: 0 };
           }
         });
 
-        Promise.all(metricsPromises).then((affiliatesWithMetrics) => {
-          const totalAffiliates = affiliatesWithMetrics.length;
-          const totalReferrals = affiliatesWithMetrics.reduce((sum, a) => sum + (a.total_referrals || 0), 0);
-          const totalCommission = affiliatesWithMetrics.reduce((sum, a) => sum + (a.total_earnings || 0), 0);
-          const pendingCommission = affiliatesWithMetrics.reduce((sum, a) => sum + (a.pending_earnings || 0), 0);
+        Promise.all(metricsPromises)
+          .then((affiliatesWithMetrics) => {
+            const totalAffiliates = affiliatesWithMetrics.length;
+            const totalReferrals = affiliatesWithMetrics.reduce(
+              (sum, a) => sum + (a.total_referrals || 0),
+              0,
+            );
+            const totalCommission = affiliatesWithMetrics.reduce(
+              (sum, a) => sum + (a.total_earnings || 0),
+              0,
+            );
+            const pendingCommission = affiliatesWithMetrics.reduce(
+              (sum, a) => sum + (a.pending_earnings || 0),
+              0,
+            );
 
-          document.getElementById("affiliateTotalCount").textContent = totalAffiliates.toLocaleString();
-          document.getElementById("affiliateTotalReferrals").textContent = totalReferrals.toLocaleString();
-          document.getElementById("affiliateTotalCommission").textContent = `UGX ${totalCommission.toLocaleString()}`;
-          document.getElementById("affiliatePendingCommission").textContent = `UGX ${pendingCommission.toLocaleString()}`;
+            document.getElementById("affiliateTotalCount").textContent =
+              totalAffiliates.toLocaleString();
+            document.getElementById("affiliateTotalReferrals").textContent =
+              totalReferrals.toLocaleString();
+            document.getElementById("affiliateTotalCommission").textContent =
+              `UGX ${totalCommission.toLocaleString()}`;
+            document.getElementById("affiliatePendingCommission").textContent =
+              `UGX ${pendingCommission.toLocaleString()}`;
 
-          const body = document.getElementById("affiliatesBody");
-          if (!affiliatesWithMetrics.length) {
-            body.innerHTML = '<tr><td colspan="11" class="text-center py-8 text-gray-400 text-sm">No affiliates found.</td></tr>';
-            return;
-          }
+            const body = document.getElementById("affiliatesBody");
+            if (!affiliatesWithMetrics.length) {
+              body.innerHTML =
+                '<tr><td colspan="11" class="text-center py-8 text-gray-400 text-sm">No affiliates found.</td></tr>';
+              return;
+            }
 
-          body.innerHTML = affiliatesWithMetrics.map((a) => {
-            const name = `${a.first_name} ${a.last_name}`;
-            return `<tr>
+            body.innerHTML = affiliatesWithMetrics
+              .map((a) => {
+                const name = `${a.first_name} ${a.last_name}`;
+                return `<tr>
               <td class="font-medium text-navy">${name}</td>
               <td class="text-gray-500 text-xs">${a.email}</td>
               <td class="font-mono text-xs text-navy">${a.slug}</td>
@@ -1339,7 +1404,7 @@
               <td>
                 <div class="flex items-center gap-2">
                   <button onclick="toggleAffiliateStatus('${a.id}', '${a.status}')" class="text-xs text-gray-400 hover:text-navy" title="Toggle Status">
-                    <i class="fas fa-${a.status === 'active' ? 'pause' : 'play'}"></i>
+                    <i class="fas fa-${a.status === "active" ? "pause" : "play"}"></i>
                   </button>
                   <button onclick="editAffiliate('${a.id}')" class="text-xs text-gray-400 hover:text-navy" title="Edit">
                     <i class="fas fa-edit"></i>
@@ -1347,21 +1412,60 @@
                 </div>
               </td>
             </tr>`;
-          }).join("");
-        }).catch((e) => {
-          console.error("Failed to load affiliate metrics:", e);
-        });
+              })
+              .join("");
+          })
+          .catch((e) => {
+            console.error("Failed to load affiliate metrics:", e);
+          });
       }
 
-      function showCreateAffiliateModal() {
-        document.getElementById("affiliateFirstName").value = "";
-        document.getElementById("affiliateLastName").value = "";
-        document.getElementById("affiliateEmail").value = "";
-        document.getElementById("commissionStarter").value = "";
-        document.getElementById("commissionPremium").value = "";
-        document.getElementById("discountStarter").value = "";
-        document.getElementById("discountPremium").value = "";
-        document.getElementById("createAffiliateModal").classList.add("show");
+      function showCreateAffiliateModal(affiliateId = null) {
+        ADMIN.editingAffiliateId = affiliateId;
+        const modal = document.getElementById("createAffiliateModal");
+        const btn = document.getElementById("createAffiliateBtn");
+        const title = document.querySelector("#createAffiliateModal h3");
+
+        if (affiliateId) {
+          // Edit mode
+          const affiliate = ADMIN.affiliates.find((a) => a.id === affiliateId);
+          if (!affiliate) return;
+
+          document.getElementById("affiliateFirstName").value =
+            affiliate.first_name || "";
+          document.getElementById("affiliateLastName").value =
+            affiliate.last_name || "";
+          document.getElementById("affiliateEmail").value =
+            affiliate.email || "";
+          document.getElementById("affiliatePromoCode").value =
+            affiliate.slug || "";
+          document.getElementById("commissionStarter").value =
+            affiliate.commission_starter || "";
+          document.getElementById("commissionPremium").value =
+            affiliate.commission_premium || "";
+          document.getElementById("discountStarter").value =
+            affiliate.discount_starter || "";
+          document.getElementById("discountPremium").value =
+            affiliate.discount_premium || "";
+
+          btn.textContent = "Update Affiliate";
+          title.textContent = "Edit Affiliate";
+        } else {
+          // Create mode
+          document.getElementById("affiliateFirstName").value = "";
+          document.getElementById("affiliateLastName").value = "";
+          document.getElementById("affiliateEmail").value = "";
+          document.getElementById("affiliatePromoCode").value = "";
+          document.getElementById("commissionStarter").value = "";
+          document.getElementById("commissionPremium").value = "";
+          document.getElementById("discountStarter").value = "";
+          document.getElementById("discountPremium").value = "";
+
+          btn.textContent = "Create Affiliate";
+          title.textContent = "Create Affiliate";
+        }
+
+        modal.classList.add("show");
       }
 
       async function createAffiliate(e) {
@@ -1369,19 +1473,26 @@
         const btn = document.getElementById("createAffiliateBtn");
         setLoading(btn, true);
 
-        const firstName = document.getElementById("affiliateFirstName").value.trim();
-        const lastName = document.getElementById("affiliateLastName").value.trim();
+        const firstName = document
+          .getElementById("affiliateFirstName")
+          .value.trim();
+        const lastName = document
+          .getElementById("affiliateLastName")
+          .value.trim();
         const email = document.getElementById("affiliateEmail").value.trim();
-        const commissionStarter = parseInt(document.getElementById("commissionStarter").value) || 0;
-        const commissionPremium = parseInt(document.getElementById("commissionPremium").value) || 0;
-        const discountStarter = parseInt(document.getElementById("discountStarter").value) || 0;
-        const discountPremium = parseInt(document.getElementById("discountPremium").value) || 0;
+        const commissionStarter =
+          parseInt(document.getElementById("commissionStarter").value) || 0;
+        const commissionPremium =
+          parseInt(document.getElementById("commissionPremium").value) || 0;
+        const discountStarter =
+          parseInt(document.getElementById("discountStarter").value) || 0;
+        const discountPremium =
+          parseInt(document.getElementById("discountPremium").value) || 0;
 
-        const slug = `${firstName}-${lastName}-${Date.now()}`.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        const slug = document.getElementById("affiliatePromoCode").value.trim().toUpperCase();
 
         try {
-          // Create affiliate record
-          await dbInsert("affiliates", {
+          const affiliateData = {
             first_name: firstName,
             last_name: lastName,
             email: email,
@@ -1390,18 +1501,33 @@
             commission_premium: commissionPremium,
             discount_starter: discountStarter,
             discount_premium: discountPremium,
-            password_set: false,
-          });
+          };
 
-          // TODO: Create Supabase auth user with temporary password
-          // For now, affiliate will need to be created manually in auth
+          if (ADMIN.editingAffiliateId) {
+            // Update existing affiliate
+            await dbUpdate(
+              "affiliates",
+              { id: ADMIN.editingAffiliateId },
+              affiliateData,
+            );
+            showToast("Affiliate updated successfully");
+          } else {
+            // Create new affiliate
+            affiliateData.password_set = false;
+            await dbInsert("affiliates", affiliateData);
+            showToast("Affiliate created successfully");
+          }
 
-          showToast("Affiliate created successfully");
           closeModal("createAffiliateModal");
+          ADMIN.editingAffiliateId = null;
           loadAffiliates();
         } catch (err) {
-          showToast("Failed to create affiliate: " + err.message, "error");
-          setLoading(btn, false, "Create Affiliate");
+          showToast("Failed to save affiliate: " + err.message, "error");
+          setLoading(
+            btn,
+            false,
+            ADMIN.editingAffiliateId ? "Update Affiliate" : "Create Affiliate",
+          );
         }
       }
 
@@ -1409,7 +1535,9 @@
         const newStatus = currentStatus === "active" ? "inactive" : "active";
         try {
           await dbUpdate("affiliates", { id }, { status: newStatus });
-          showToast(`Affiliate ${newStatus === "active" ? "activated" : "deactivated"}`);
+          showToast(
+            `Affiliate ${newStatus === "active" ? "activated" : "deactivated"}`,
+          );
           loadAffiliates();
         } catch (err) {
           showToast("Failed to update affiliate status", "error");
@@ -1417,8 +1545,7 @@
       }
 
       function editAffiliate(id) {
-        // TODO: Implement edit functionality
-        showToast("Edit functionality coming soon");
+        showCreateAffiliateModal(id);
       }
 
       function closeModal(id) {

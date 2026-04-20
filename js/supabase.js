@@ -112,7 +112,7 @@ async function updatePassword(newPassword) {
     method: "PUT",
     body: JSON.stringify({ password: newPassword }),
   });
-  return data;
+    return data;
 }
 async function signOut() {
   try {

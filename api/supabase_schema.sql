@@ -35,14 +35,43 @@ ALTER TABLE public.orders
 -- Enable RLS
 ALTER TABLE public.affiliates ENABLE ROW LEVEL SECURITY;
 
--- Policies for affiliates (admin only access)
-CREATE POLICY "Affiliates are viewable by authenticated users" ON public.affiliates
-    FOR SELECT USING (auth.role() = 'authenticated');
+-- Drop old insecure policies if they exist
+DROP POLICY IF EXISTS "Affiliates are viewable by authenticated users" ON public.affiliates;
+DROP POLICY IF EXISTS "Affiliates are insertable by authenticated users" ON public.affiliates;
+DROP POLICY IF EXISTS "Affiliates are updatable by authenticated users" ON public.affiliates;
 
-CREATE POLICY "Affiliates are insertable by authenticated users" ON public.affiliates
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+-- Function to check if current user is an affiliate (bypasses RLS)
+CREATE OR REPLACE FUNCTION public.is_current_user_affiliate()
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.affiliates
+    WHERE email = auth.jwt() ->> 'email'
+  );
+$$;
 
-CREATE POLICY "Affiliates are updatable by authenticated users" ON public.affiliates
-    FOR UPDATE USING (auth.role() = 'authenticated');
+-- Policies for affiliates
+-- Only admin can create affiliates
+CREATE POLICY "Only admin can create affiliates" ON public.affiliates
+    FOR INSERT WITH CHECK (auth.jwt() ->> 'email' = 'amandatechnologies@gmail.com');
 
--- Note: In production, restrict to admin users only
+-- Affiliates can view their own data, admin can view all
+CREATE POLICY "Affiliates can view own data, admin can view all" ON public.affiliates
+    FOR SELECT USING (
+        auth.jwt() ->> 'email' = 'amandatechnologies@gmail.com' OR
+        public.is_current_user_affiliate()
+    );
+
+-- Affiliates can update their own profile fields, admin can update everything
+CREATE POLICY "Affiliates can update own profile, admin can update all" ON public.affiliates
+    FOR UPDATE USING (
+        auth.jwt() ->> 'email' = 'amandatechnologies@gmail.com' OR
+        public.is_current_user_affiliate()
+    );
+
+-- Only admin can delete affiliates
+CREATE POLICY "Only admin can delete affiliates" ON public.affiliates
+    FOR DELETE USING (auth.jwt() ->> 'email' = 'amandatechnologies@gmail.com');

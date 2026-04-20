@@ -695,9 +695,12 @@
         return new Date(dateStr).toLocaleDateString();
       }
 
-      function logout() {
-        supabase.auth.signOut();
-        window.location.href = "../login.html";
+      async function logout() {
+        try {
+    await sbFetch("/auth/v1/logout", { method: "POST" });
+  } catch (_) {}
+  clearSession();
+  window.location.href = "/login.html";
       }
 
       // Load profile data into settings

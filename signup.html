@@ -241,6 +241,11 @@
     </div>
 
     <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      document.getElementById("promoCode").value = urlParams
+          .get("promo")
+          .trim()
+          .toUpperCase();
       function togglePwd(id, iconId) {
         const inp = document.getElementById(id),
           icon = document.getElementById(iconId);
@@ -258,7 +263,7 @@
         const promoCode = document
           .getElementById("promoCode")
           .value.trim()
-          .toLowerCase();
+          .toUpperCase();
         const password = document.getElementById("password").value;
         const confirm = document.getElementById("confirmPwd").value;
         const errEl = document.getElementById("signupError");

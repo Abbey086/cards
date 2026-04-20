@@ -189,14 +189,7 @@
               "affiliates",
               `?email=eq.${s.user.email}&select=password_set`,
             );
-            if (
-              affiliates &&
-              affiliates.length > 0 &&
-              !affiliates[0].password_set
-            ) {
-              window.location.href = "affiliate/set-password.html";
-              return;
-            }
+           
             window.location.href = "affiliate/dashboard.html";
           } else {
             window.location.href = isAdmin()
@@ -238,14 +231,7 @@
               "affiliates",
               `?email=eq.${email}&select=password_set`,
             );
-            if (
-              affiliates &&
-              affiliates.length > 0 &&
-              !affiliates[0].password_set
-            ) {
-              window.location.href = "affiliate/set-password.html";
-              return;
-            }
+            
             window.location.href = "affiliate/dashboard.html";
           } else {
             window.location.href = isAdmin()
