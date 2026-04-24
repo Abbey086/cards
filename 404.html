@@ -1,0 +1,856 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Amanda Cards – Digital Profile</title>
+    <meta name="description" content="Digital business card" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Load supabase from parent if nested, or same dir -->
+   <script>
+  // Force base path for the supabase config relative to the root
+  const scriptPath = "/js/supabase.js"; 
+  document.write(`<script src="${scriptPath}"><\/script>`);
+</script>
+    <style>
+      :root {
+        --brand: #1b2b4b;
+        --brand-light: #243560;
+        --brand-acc: #c9a84c;
+      }
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--brand);
+        color: #fff;
+        min-height: 100vh;
+      }
+      .font-display {
+        font-family: "Sora", sans-serif;
+      }
+      .brand-card {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+      }
+      .acc-btn {
+        background: var(--brand-acc);
+        color: var(--brand);
+        font-family: "Sora", sans-serif;
+        font-weight: 700;
+        border: none;
+        border-radius: 14px;
+        padding: 13px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: opacity 0.2s;
+        width: 100%;
+      }
+      .acc-btn:hover {
+        opacity: 0.88;
+      }
+      .link-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 14px 18px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        color: #fff;
+      }
+      .link-btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+        transform: translateX(4px);
+      }
+      .social-orb {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        color: #fff;
+        font-size: 18px;
+      }
+      .social-orb:hover {
+        background: var(--brand-acc);
+        color: var(--brand);
+      }
+      .service-tag {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 100px;
+        padding: 6px 14px;
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.8);
+        margin: 3px;
+      }
+      .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .gallery-item {
+        aspect-ratio: 1;
+        border-radius: 14px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+      }
+      .gallery-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s;
+      }
+      .gallery-item:hover img {
+        transform: scale(1.05);
+      }
+      .avatar-ring {
+        border: 3px solid var(--brand-acc);
+      }
+      .icon-box {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        flex-shrink: 0;
+      }
+      .share-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: var(--brand);
+        backdrop-filter: blur(12px);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 12px 16px;
+        z-index: 50;
+      }
+      .tab {
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+        margin-block: 8px;
+      }
+      .tab.active {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+      }
+      .contact-input {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1.5px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        padding: 11px 14px;
+        color: #fff;
+        font-family: "DM Sans", sans-serif;
+        font-size: 14px;
+        outline: none;
+        box-sizing: border-box;
+      }
+      .contact-input:focus {
+        border-color: var(--brand-acc);
+      }
+      .contact-input::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+      }
+      .video-wrap {
+        border-radius: 20px;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.3);
+        aspect-ratio: 16/9;
+      }
+      .video-wrap iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+      .toast-card {
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #22c55e;
+        color: #fff;
+        font-weight: 600;
+        padding: 10px 22px;
+        border-radius: 100px;
+        font-size: 13px;
+        z-index: 100;
+        display: none;
+        white-space: nowrap;
+      }
+      .toast-card.show {
+        display: block;
+      }
+      .loading-overlay {
+        position: fixed;
+        inset: 0;
+        background: #1b2b4b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 200;
+      }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(201, 168, 76, 0.2);
+        border-top-color: #c9a84c;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .lightbox {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+      }
+      .lightbox.show {
+        display: flex;
+      }
+      .lightbox img {
+        max-width: 90vw;
+        max-height: 90vh;
+        border-radius: 12px;
+        object-fit: contain;
+      }
+      @media (max-width: 480px) {
+        .gallery-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .fade-up {
+        animation: fadeUp 0.5s ease forwards;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="text-center">
+        <div class="spinner" style="margin: 0 auto 16px"></div>
+        <p style="color: rgba(255, 255, 255, 0.4); font-size: 13px">
+          Loading profile…
+        </p>
+      </div>
+    </div>
+
+    <!-- 404 state -->
+    <div
+      id="notFound"
+      class="hidden min-h-screen flex items-center justify-center px-4 text-center"
+    >
+      <div>
+        <div class="font-display text-6xl font-bold text-white/10 mb-4">
+          404
+        </div>
+        <h1 class="font-display text-xl font-bold text-white mb-2">
+          Card Not Found
+        </h1>
+        <p class="text-white/40 text-sm mb-6">
+          This digital card doesn't exist or may have been removed.
+        </p>
+        <a href="/" class="text-gold text-sm hover:underline"
+          >← Back to Amanda Cards</a
+        >
+      </div>
+    </div>
+
+    <!-- Main content -->
+    <div
+      id="cardContent"
+      class="hidden max-w-md mx-auto min-h-screen pb-24 relative"
+    >
+      <!-- Cover -->
+      <div
+        class="h-32 sm:h-40 w-full"
+        id="coverBg"
+        style="background: linear-gradient(var(--brand-acc))"
+      ></div>
+
+      <!-- Profile header -->
+      <div class="px-5 pb-4 fade-up">
+        <div class="flex items-end justify-between -mt-12 mb-4">
+          <div
+            class="w-24 h-24 rounded-2xl avatar-ring overflow-hidden bg-white/10 flex items-center justify-center"
+            id="avatarEl"
+          >
+            <span
+              class="font-display text-4xl font-bold text-white/40"
+              id="avatarInitial"
+              >?</span
+            >
+          </div>
+          <div class="flex gap-2">
+            <button
+              onclick="shareCard()"
+              class="icon-box cursor-pointer hover:bg-white/15 transition"
+              title="Share"
+            >
+              <i
+                class="fas fa-share-nodes text-sm"
+                style="color: var(--brand-acc)"
+              ></i>
+            </button>
+            <button
+              onclick="saveContact()"
+              class="acc-btn text-sm px-4 py-2 rounded-xl"
+              style="width: auto"
+            >
+              Save Contact
+            </button>
+          </div>
+        </div>
+
+        <h1 class="font-display text-2xl font-bold text-white" id="profileName">
+          —
+        </h1>
+        <p
+          class="text-sm mt-0.5 mb-3"
+          id="profileTitle"
+          style="color: var(--brand-acc)"
+        >
+          —
+        </p>
+        <p
+          class="text-sm leading-relaxed mb-4 text-white/70"
+          id="profileBio"
+        ></p>
+
+        <!-- Quick contact -->
+        <div class="flex flex-wrap gap-2 mb-5" id="contactBadges"></div>
+
+        <!-- Socials -->
+        <div class="flex gap-2 flex-wrap mb-5" id="socialOrbs"></div>
+      </div>
+
+      <!-- INFO TAB -->
+      <div id="tab-info" class="px-5">
+        <div class="brand-card p-5 mb-4" id="servicesBlock">
+          <h3
+            class="font-display font-semibold text-sm mb-3"
+            style="color: var(--brand-acc)"
+          >
+            Services
+          </h3>
+          <div id="servicesTags"></div>
+        </div>
+        <div class="space-y-3" id="infoLinks"></div>
+      </div>
+
+      <!-- GALLERY TAB -->
+      <div id="tab-gallery" class="px-5 my-4">
+        <div class="gallery-grid" id="galleryGrid"></div>
+      </div>
+
+      <!-- VIDEO TAB (Premium) -->
+      <div id="tab-video" class="px-5 my-2">
+        <div class="video-wrap">
+          <video
+            id="videoPlayer"
+            controls
+            style="width: 100%; height: 100%"
+          ></video>
+        </div>
+      </div>
+
+      <!-- CONTACT FORM TAB (Premium) -->
+      <div id="tab-contact" class="px-5 my-4">
+        <div class="brand-card p-5">
+          <h3 class="font-display font-semibold text-base mb-4">
+            Send a Message
+          </h3>
+          <form
+            id="contactForm"
+            class="space-y-3"
+            onsubmit="submitContactForm(event)"
+          >
+            <div>
+              <label class="text-xs text-white/50 mb-1 block">Your Name *</label
+              ><input
+                type="text"
+                name="name"
+                class="contact-input"
+                placeholder="Jane Nakato"
+                required
+              />
+            </div>
+            <div>
+              <label class="text-xs text-white/50 mb-1 block">Email *</label
+              ><input
+                type="email"
+                name="email"
+                class="contact-input"
+                placeholder="jane@email.com"
+                required
+              />
+            </div>
+            <div>
+              <label class="text-xs text-white/50 mb-1 block"
+                >Phone (optional)</label
+              ><input
+                type="tel"
+                name="phone"
+                class="contact-input"
+                placeholder="+256 700 000 000"
+              />
+            </div>
+            <div>
+              <label class="text-xs text-white/50 mb-1 block">Message *</label
+              ><textarea
+                name="message"
+                rows="4"
+                class="contact-input resize-none"
+                placeholder="Hi, I'd like to…"
+                required
+              ></textarea>
+            </div>
+            <button type="submit" id="contactSubmitBtn" class="acc-btn">
+              Send Message
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sticky bottom bar -->
+    <div class="share-bar" id="shareBar" style="display: none">
+      <div class="max-w-md mx-auto flex items-center justify-between">
+        <a href="/" class="text-xs text-white/30 hover:text-white/60 transition"
+          >Powered by AmandaCards</a
+        >
+        <button
+          onclick="saveContact()"
+          class="acc-btn text-sm px-5 py-2.5 rounded-xl"
+          style="width: auto"
+        >
+          <i class="fas fa-address-book mr-1.5 text-xs"></i> Save Contact
+        </button>
+      </div>
+    </div>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+      <img id="lightboxImg" src="" alt="" />
+      <button
+        onclick="closeLightbox()"
+        style="
+          position: absolute;
+          top: 16px;
+          right: 16px;
+          background: rgba(255, 255, 255, 0.1);
+          border: none;
+          color: #fff;
+          border-radius: 50%;
+          width: 36px;
+          height: 36px;
+          cursor: pointer;
+          font-size: 16px;
+        "
+      >
+        ×
+      </button>
+    </div>
+
+    <div class="toast-card" id="toast"></div>
+
+    <script>
+      // ── Globals ────────────────────────────────────────────────
+      let CARD = {
+        profile: null,
+        cardProfile: null,
+        services: [],
+        gallery: [],
+      };
+
+      async function boot() {
+  const path = window.location.pathname;
+  
+  // 1. Check if the path starts with /card/
+  if (path.includes('/card/')) {
+    // Extract slug: /card/kisakye-ronnie-fbc75e -> kisakye-ronnie-fbc75e
+    const parts = path.split("/").filter(Boolean);
+    const slug = parts[parts.length - 1];
+
+    if (slug) {
+      // Attempt to load the card
+      await loadCardData(slug);
+      return;
+    }
+  }
+
+  // 2. If it's not a /card/ URL or slug is missing, show the actual 404 UI
+  showActual404();
+}
+
+async function loadCardData(slug) {
+  try {
+    // Fetch profile by slug from Supabase
+    const profiles = await sbFetch(
+      `/rest/v1/profiles?slug=eq.${encodeURIComponent(slug)}&plan_status=eq.active&select=*`,
+      { anonymous: true }
+    );
+
+    if (!profiles || profiles.length === 0) {
+      showActual404();
+      return;
+    }
+
+    CARD.profile = profiles[0];
+    
+            // Fetch card profile
+          const cp = await sbFetch(
+            `/rest/v1/card_profiles?user_id=eq.${CARD.profile.id}&select=*`,
+            { anonymous: true },
+          );
+          CARD.cardProfile = cp?.[0] || null;
+
+          // Fetch services
+          const sv = await sbFetch(
+            `/rest/v1/services?user_id=eq.${CARD.profile.id}&select=*&order=sort_order.asc`,
+            { anonymous: true },
+          );
+          CARD.services = sv || [];
+
+          // Fetch gallery
+          const gl = await sbFetch(
+            `/rest/v1/gallery?user_id=eq.${CARD.profile.id}&select=*&order=sort_order.asc`,
+            { anonymous: true },
+          );
+          CARD.gallery = gl || [];
+
+    
+    renderCard(); // This will show the #cardContent div
+    trackVisit(slug);
+  } catch (e) {
+    console.error("Routing error:", e);
+    showActual404();
+  }
+}
+
+function showActual404() {
+  document.getElementById("loadingOverlay").style.display = "none";
+  document.getElementById("notFound").classList.remove("hidden");
+  document.getElementById("cardContent").classList.add("hidden");
+}
+
+      function show404() {
+        document.getElementById("loadingOverlay").style.display = "none";
+        document.getElementById("notFound").classList.remove("hidden");
+      }
+
+      // ── Render ─────────────────────────────────────────────────
+      function renderCard() {
+        const p = CARD.profile;
+        const cp = CARD.cardProfile;
+        const isPremium = p.plan === "premium";
+
+        // Apply brand colour
+        if (isPremium && cp?.brand_colour) {
+          document.documentElement.style.setProperty(
+            "--brand",
+            cp.brand_colour,
+          );
+          document.documentElement.style.setProperty(
+            "--brand-light",
+            lighten(cp.brand_colour, 15),
+          );
+          document.body.style.background = cp.brand_colour;
+        }
+
+        // Avatar
+        const name = `${p.first_name || ""} ${p.last_name || ""}`.trim();
+        document.getElementById("avatarInitial").textContent = name
+          .charAt(0)
+          .toUpperCase();
+        if (cp?.avatar_url) {
+          document.getElementById("avatarEl").innerHTML =
+            `<img src="${cp.avatar_url}" alt="${name}" class="w-full h-full object-cover">`;
+        }
+
+        // Name & title
+
+        document.getElementById("profileName").textContent =
+          cp?.first_name + " " + cp?.last_name || name || "—";
+        document.getElementById("profileTitle").textContent = cp?.title || "";
+        document.getElementById("profileBio").textContent = cp?.bio || "";
+        // Contact badges
+        const badges = document.getElementById("contactBadges");
+        if (cp?.phone)
+          badges.innerHTML += `<a href="tel:${cp.phone}" onclick="trackClick('phone')" class="link-btn px-3 py-2 rounded-xl" style="font-size:13px"><i class="fas fa-phone text-xs" style="color:var(--brand-acc)"></i> ${cp.phone}</a>`;
+        if (cp?.email)
+          badges.innerHTML += `<a href="mailto:${cp.email}" onclick="trackClick('email')" class="link-btn px-3 py-2 rounded-xl" style="font-size:13px"><i class="fas fa-envelope text-xs" style="color:var(--brand-acc)"></i> ${cp.email}</a>`;
+
+        // Socials
+        const socialMap = [
+          ["instagram", "fab fa-instagram", cp?.soc_instagram],
+          ["facebook", "fab fa-facebook-f", cp?.soc_facebook],
+          ["linkedin", "fab fa-linkedin-in", cp?.soc_linkedin],
+          [
+            "whatsapp",
+            "fab fa-whatsapp",
+            cp?.soc_whatsapp
+              ? `https://wa.me/${cp.soc_whatsapp.replace(/\D/g, "")}`
+              : null,
+          ],
+          ["tiktok", "fab fa-tiktok", cp?.soc_tiktok],
+          ["twitter", "fab fa-twitter", cp?.soc_twitter],
+        ];
+        const orbsEl = document.getElementById("socialOrbs");
+        socialMap.forEach(([type, icon, url]) => {
+          if (url)
+            orbsEl.innerHTML += `<a href="${formatLink(url)}" target="_blank" onclick="trackClick('${type}')" class="social-orb"><i class="${icon}"></i></a>`;
+        });
+
+        // Services
+        if (CARD.services.length) {
+          document.getElementById("servicesTags").innerHTML = CARD.services
+            .map((s) => `<span class="service-tag">${s.name}</span>`)
+            .join("");
+        } else {
+          document.getElementById("servicesBlock").style.display = "none";
+        }
+
+        // Info links
+        const ll = document.getElementById("infoLinks");
+        if (cp?.website)
+          ll.innerHTML += `<a href="${formatLink(cp.website)}" target="_blank" onclick="trackClick('website')" class="link-btn"><div class="icon-box"><i class="fas fa-globe text-sm" style="color:var(--brand-acc)"></i></div><div><div style="font-size:11px;color:rgba(255,255,255,.4)">Website</div><div style="font-size:14px">${formatLink(cp.website).replace(/^https?:\/\//, "")}</div></div><i class="fas fa-arrow-right ml-auto text-xs text-white/30"></i></a>`;
+        if (cp?.location)
+          ll.innerHTML += `<div class="link-btn"><div class="icon-box"><i class="fas fa-map-marker-alt text-sm" style="color:var(--brand-acc)"></i></div><div><div style="font-size:11px;color:rgba(255,255,255,.4)">Location</div><div style="font-size:14px">${cp.location}</div></div></div>`;
+
+        // Gallery
+        const gg = document.getElementById("galleryGrid");
+        CARD.gallery.forEach((img, i) => {
+          gg.innerHTML += `<div class="gallery-item" onclick="openLightbox('${img.image_url}')"><img src="${img.image_url}" alt="Gallery ${i + 1}" loading="lazy"></div>`;
+        });
+
+        // Cover background from first gallery image
+        const cover = document.getElementById("coverBg");
+        if (CARD.gallery?.length > 0 && CARD.gallery[0]?.image_url) {
+          cover.style.background = `linear-gradient(135deg, rgba(27,43,75,0.65), rgba(27,43,75,0.35)), url('${CARD.gallery[0].image_url}') center/cover no-repeat`;
+        } else {
+          cover.style.background =
+            "linear-gradient(135deg,var(--brand-light),var(--brand))";
+        }
+
+        // Premium features
+        if (cp?.video_url) {
+          document.getElementById("videoPlayer").src = cp.video_url;
+        }else {
+          document.getElementById("tab-video").style.display = "none";
+        }
+        if (!isPremium) {
+          document.getElementById("tab-contact").style.display = "none";
+        }
+
+        // Show card, hide loader
+        document.getElementById("loadingOverlay").style.display = "none";
+        document.getElementById("cardContent").classList.remove("hidden");
+        document.getElementById("shareBar").style.display = "block";
+
+        // Start time-on-page tracking
+        startTimeTracking();
+      }
+
+      document.getElementById("videoPlayer").addEventListener("play", () => {
+        trackClick("video_play");
+        console.log("Video play tracked");
+      });
+
+      // ── Tabs ───────────────────────────────────────────────────
+      // Removed tabs, all sections shown
+
+      // ── Save Contact ───────────────────────────────────────────
+      function saveContact() {
+        const p = CARD.profile;
+        const cp = CARD.cardProfile;
+        const name = `${p.first_name || ""} ${p.last_name || ""}`.trim();
+        const vcard = [
+          "BEGIN:VCARD",
+          "VERSION:3.0",
+          `FN:${name}`,
+          `N:${p.last_name || ""};${p.first_name || ""};;;`,
+          cp?.phone ? `TEL;TYPE=CELL:${cp.phone}` : "",
+          cp?.email ? `EMAIL:${cp.email}` : "",
+          cp?.website ? `URL:${cp.website}` : "",
+          cp?.location ? `ADR:;;${cp.location};;;;` : "",
+          `URL:${window.location.href}`,
+          "END:VCARD",
+        ]
+          .filter(Boolean)
+          .join("\n");
+        const blob = new Blob([vcard], { type: "text/vcard" });
+        const a = document.createElement("a");
+        a.href = formatLink(URL.createObjectURL(blob));
+        a.download = `${name.replace(/\s+/g, "-")}.vcf`;
+        a.click();
+        trackClick("save_contact");
+        toast("Contact saved!");
+      }
+      function formatLink(url) {
+        if (!url) return "";
+        // If it doesn't start with http:// or https://, add it
+        if (!/^https?:\/\//i.test(url)) {
+          return "https://" + url;
+        }
+        return url;
+      }
+      function shareCard() {
+        const url = window.location.href;
+        if (navigator.share) {
+          const name =
+            `${CARD.profile.first_name || ""} ${CARD.profile.last_name || ""}`.trim();
+          navigator.share({ title: name, url }).catch(() => {});
+        } else {
+          navigator.clipboard.writeText(url).then(() => toast("Link copied!"));
+        }
+      }
+
+      // ── Contact Form ───────────────────────────────────────────
+      async function submitContactForm(e) {
+        e.preventDefault();
+        const btn = document.getElementById("contactSubmitBtn");
+        btn.textContent = "Sending…";
+        btn.disabled = true;
+        const fd = new FormData(e.target);
+        try {
+          await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
+            method: "POST",
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              "Content-Type": "application/json",
+              Prefer: "return=minimal",
+            },
+            body: JSON.stringify({
+              card_user_id: CARD.profile.id,
+              sender_name: fd.get("name"),
+              sender_email: fd.get("email"),
+              sender_phone: fd.get("phone") || null,
+              message: fd.get("message"),
+            }),
+          });
+          btn.textContent = "✓ Message Sent!";
+          toast("Message sent!");
+          e.target.reset();
+          setTimeout(() => {
+            btn.textContent = "Send Message";
+            btn.disabled = false;
+          }, 3000);
+        } catch {
+          btn.textContent = "Send Message";
+          btn.disabled = false;
+          toast("Failed to send. Please try again.", true);
+        }
+      }
+
+      // ── Analytics ──────────────────────────────────────────────
+      async function trackVisit(slug) {
+        await trackEvent("visits", {
+          user_id: CARD.profile.id,
+          slug,
+          referrer: document.referrer || null,
+          user_agent: navigator.userAgent,
+        });
+      }
+
+      async function trackClick(type) {
+        await trackEvent("link_clicks", {
+          user_id: CARD.profile.id,
+          link_type: type,
+        });
+      }
+
+      let _startTime = Date.now();
+      function startTimeTracking() {
+        // Track time on page when user leaves
+        window.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "hidden") {
+            const secs = Math.round((Date.now() - _startTime) / 1000);
+            // Fire-and-forget avg time update
+            navigator.sendBeacon &&
+              navigator.sendBeacon(
+                `${SUPABASE_URL}/rest/v1/rpc/track_session`,
+                JSON.stringify({ user_id: CARD.profile.id, seconds: secs }),
+              );
+          }
+        });
+      }
+
+      // ── Lightbox ───────────────────────────────────────────────
+      function openLightbox(src) {
+        document.getElementById("lightboxImg").src = src;
+        document.getElementById("lightbox").classList.add("show");
+      }
+      function closeLightbox() {
+        document.getElementById("lightbox").classList.remove("show");
+      }
+
+      // ── Utils ──────────────────────────────────────────────────
+      function lighten(hex, amt) {
+        const num = parseInt(hex.replace("#", ""), 16);
+        const r = Math.min(255, ((num >> 16) & 0xff) + amt),
+          g = Math.min(255, ((num >> 8) & 0xff) + amt),
+          b = Math.min(255, (num & 0xff) + amt);
+        return (
+          "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")
+        );
+      }
+
+      function toast(msg, error = false) {
+        const t = document.getElementById("toast");
+        t.textContent = (error ? "✗ " : "✓ ") + msg;
+        t.style.background = error ? "#ef4444" : "#22c55e";
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 2500);
+      }
+
+      boot();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Confirm Your Email – Amanda Cards</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          "DM Sans",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        background-color: #f4f6fa;
+        line-height: 1.6;
+        color: #333;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      }
+      .header {
+        background: linear-gradient(135deg, #1b2b4b 0%, #243560 100%);
+        padding: 40px 24px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 200px;
+        height: 200px;
+        background: rgba(201, 168, 76, 0.1);
+        border-radius: 50%;
+        transform: translate(50%, -50%);
+      }
+      .logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+        position: relative;
+        z-index: 1;
+      }
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #c9a84c, #e8c96d);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: white;
+      }
+      .logo-text {
+        font-family: "Sora", sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: white;
+        letter-spacing: -0.5px;
+      }
+      .logo-text .accent {
+        color: #c9a84c;
+      }
+      .header h1 {
+        font-family: "Sora", sans-serif;
+        font-size: 28px;
+        font-weight: 700;
+        color: white;
+        margin-top: 24px;
+        position: relative;
+        z-index: 1;
+      }
+      .content {
+        padding: 40px 32px;
+      }
+      .greeting {
+        font-size: 16px;
+        color: #6b7280;
+        margin-bottom: 24px;
+        line-height: 1.5;
+      }
+      .message {
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 32px;
+        line-height: 1.6;
+      }
+      .cta-button {
+        display: inline-block;
+        background: linear-gradient(135deg, #c9a84c, #e8c96d);
+        color: #1b2b4b;
+        padding: 14px 40px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(201, 168, 76, 0.3);
+        border: none;
+        cursor: pointer;
+        display: inline-block;
+        text-align: center;
+        width: 100%;
+        margin-bottom: 24px;
+      }
+      .cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(201, 168, 76, 0.4);
+      }
+      .backup-link {
+        background-color: #f9fafb;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        margin-bottom: 32px;
+      }
+      .backup-link-label {
+        font-size: 12px;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 8px;
+        display: block;
+        font-weight: 600;
+      }
+      .backup-link-url {
+        font-size: 13px;
+        color: #1b2b4b;
+        word-break: break-all;
+        font-family: "Monaco", "Courier New", monospace;
+        line-height: 1.4;
+      }
+      .divider {
+        height: 1px;
+        background-color: #e5e7eb;
+        margin: 32px 0;
+      }
+      .footer-text {
+        font-size: 12px;
+        color: #9ca3af;
+        line-height: 1.6;
+        margin-bottom: 16px;
+      }
+      .footer {
+        padding: 32px;
+        background-color: #f9fafb;
+        border-top: 1px solid #e5e7eb;
+        text-align: center;
+      }
+      .footer-link {
+        color: #c9a84c;
+        text-decoration: none;
+        font-weight: 500;
+      }
+      .footer-link:hover {
+        text-decoration: underline;
+      }
+      .security-note {
+        background-color: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 12px 16px;
+        border-radius: 4px;
+        font-size: 12px;
+        color: #92400e;
+        margin-bottom: 24px;
+        line-height: 1.5;
+      }
+      @media (max-width: 600px) {
+        .container {
+          border-radius: 0;
+        }
+        .content {
+          padding: 32px 20px;
+        }
+        .header h1 {
+          font-size: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <div class="logo">
+          <div class="logo-icon">🎴</div>
+          <div>
+            <div class="logo-text">Amanda<span class="accent">Cards</span></div>
+          </div>
+        </div>
+        <h1>Confirm Your Email</h1>
+      </div>
+
+      <!-- Content -->
+      <div class="content">
+        <p class="greeting">Welcome to Amanda Cards!</p>
+
+        <p class="message">
+          We're excited to have you on board. To get started and begin creating
+          your professional digital business card, please confirm your email
+          address by clicking the button below.
+        </p>
+
+        <a href="{{ .ConfirmationURL }}" class="cta-button"
+          >✓ Confirm Email Address</a
+        >
+
+        <!-- Security Note -->
+        <div class="security-note">
+          <strong>Didn't sign up for Amanda Cards?</strong> If you didn't create
+          this account, you can safely ignore this email.
+        </div>
+
+        <!-- Backup Link -->
+        <div class="backup-link">
+          <span class="backup-link-label">Or copy this link:</span>
+          <div class="backup-link-url">{{ .ConfirmationURL }}</div>
+        </div>
+
+        <!-- Divider -->
+        <div class="divider"></div>
+
+        <p class="footer-text">
+          After confirming your email, you'll have full access to your Amanda
+          Cards dashboard where you can create, customize, and share your
+          professional digital business cards with clients and contacts.
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p class="footer-text">
+          © 2026 Amanda Cards. All rights reserved.<br />
+          <a href="https://cards.amandatechnologies.com" class="footer-link"
+            >Visit Website</a
+          >
+        </p>
+        <p
+          class="footer-text"
+          style="margin-bottom: 0; margin-top: 12px; font-size: 11px"
+        >
+          Amanda Technologies | {{ .SiteURL }}
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
