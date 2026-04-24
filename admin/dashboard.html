@@ -67,11 +67,30 @@
         margin-left: 240px;
       }
       @media (max-width: 768px) {
-        .sidebar {
+        .main-content {
+          margin-left: 50px;
+        }
+        .sidebar.open {
+          width: 50px;
+        }
+        .sidebar:not(.open) .menu {
+          font-size: 1.4rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+        }
+        .sidebar:not(.open) .menu::after {
+          content: "Close";
+          font-size: 0.75rem;
+          color: #c9a84c;
+        }
+        .sidebar.open .xcc {
           display: none;
         }
-        .main-content {
-          margin-left: 0;
+        .sidebar.open .nav-link {
+          padding: 0.65rem;
+          justify-content: center;
         }
       }
       .nav-link {
@@ -204,21 +223,25 @@
     </style>
   </head>
   <body>
-    <aside class="sidebar">
+    <aside class="sidebar open">
       <div class="p-5 border-b border-white/10">
         <div class="flex items-center gap-2">
           <div
-            class="w-8 h-8 gold-gradient rounded-xl flex items-center justify-center"
+            class="md:w-8 md:h-8 h-10 gold-gradient rounded-xl flex items-center justify-center"
           >
             <i class="fas fa-id-card text-white text-xs"></i>
           </div>
-          <span class="font-display font-bold text-white text-base"
+          <span class="font-display font-bold text-white text-base xcc"
             >Amanda<span class="text-gold">Cards</span></span
           >
         </div>
-        <div class="mt-2 text-xs text-blue-200/40 flex items-center gap-1">
+        <div class="mt-2 text-xs text-blue-200/40 flex items-center gap-1 xcc">
           <i class="fas fa-shield-halved text-gold text-xs"></i> Super Admin
         </div>
+        <i
+          onclick="toggleSidebar()"
+          class="fas fa-bars md:hidden menu text-white text-lg mx-auto block text-center mt-2"
+        ></i>
       </div>
       <nav class="p-3 space-y-1">
         <div
@@ -226,42 +249,49 @@
           onclick="showSection('overview')"
           id="nav-overview"
         >
-          <i class="fas fa-chart-pie w-4 text-center"></i> Overview
+          <i class="fas fa-chart-pie w-4 text-center"></i>
+          <span class="xcc">Overview</span>
         </div>
         <div class="nav-link" onclick="showSection('orders')" id="nav-orders">
-          <i class="fas fa-list-ul w-4 text-center"></i> Orders
+          <i class="fas fa-list-ul w-4 text-center"></i>
+          <span class="xcc">Orders</span>
           <span
             id="pendingBadge"
-            class="ml-auto bg-gold text-navy text-xs font-bold px-1.5 py-0.5 rounded-full hidden"
+            class="-ml-3 md:ml-auto bg-gold text-navy text-xs font-bold px-1.5 py-0.5 rounded-full hidden"
             >0</span
           >
         </div>
         <div class="nav-link" onclick="showSection('users')" id="nav-users">
-          <i class="fas fa-users w-4 text-center"></i> Users
+          <i class="fas fa-users w-4 text-center"></i>
+          <span class="xcc">Users</span>
         </div>
         <div
           class="nav-link"
           onclick="showSection('affiliates')"
           id="nav-affiliates"
         >
-          <i class="fas fa-hand-holding-dollar w-4 text-center"></i> Affiliates
+          <i class="fas fa-hand-holding-dollar w-4 text-center"></i>
+          <span class="xcc">Affiliates</span>
         </div>
         <div
           class="nav-link"
           onclick="showSection('messages')"
           id="nav-messages"
         >
-          <i class="fas fa-envelope w-4 text-center"></i> Messages
+          <i class="fas fa-envelope w-4 text-center"></i>
+          <span class="xcc">Messages</span>
         </div>
       </nav>
       <div
         class="absolute bottom-0 left-0 right-0 p-4 border-t border-white/10"
       >
         <div class="nav-link" onclick="window.location.href = '../index.html'">
-          <i class="fas fa-arrow-left w-4 text-center"></i> Back to Site
+          <i class="fas fa-arrow-left w-4 text-center"></i>
+          <span class="xcc">Back to Site</span>
         </div>
         <div class="nav-link mt-1" onclick="signOut()">
-          <i class="fas fa-sign-out-alt w-4 text-center"></i> Log Out
+          <i class="fas fa-sign-out-alt w-4 text-center"></i>
+          <span class="xcc">Log Out</span>
         </div>
       </div>
     </aside>
@@ -274,9 +304,6 @@
           Admin Overview
         </h1>
         <div class="flex items-center gap-3">
-          <span class="text-xs text-gray-400"
-            >amandatechnologies@gmail.com</span
-          >
           <div
             class="w-8 h-8 gold-gradient rounded-xl flex items-center justify-center font-display font-bold text-navy text-xs"
           >
@@ -438,6 +465,7 @@
                     <th>Contact #</th>
                     <th>Status</th>
                     <th>Activate</th>
+                    <th>Affi Settled</th>
                     <th>QR Code</th>
                     <th>Date</th>
                   </tr>
@@ -525,7 +553,7 @@
                 </div>
               </div>
               <div class="bg-gray-50 rounded-2xl p-4">
-                <div class="text-xs text-gray-400">Pending Commission</div>
+                <div class="text-xs text-gray-400">Unsettled Commission</div>
                 <div
                   class="font-display text-2xl font-bold text-navy"
                   id="affiliatePendingCommission"
@@ -881,7 +909,7 @@
                 },
               ),
               fetch(
-                `${SUPABASE_URL}/rest/v1/profiles?plan_status=eq.pending&select=id`,
+                `${SUPABASE_URL}/rest/v1/orders?plan_status=eq.pending&select=id`,
                 {
                   headers: {
                     apikey: SUPABASE_ANON_KEY,
@@ -975,7 +1003,7 @@
       async function loadOrders() {
         try {
           const data = await sbFetch(
-            `/rest/v1/orders?select=id,user_id,plan,status,price,created_at,contact_phone,profiles(first_name,last_name,email,slug,contact_phone)&order=created_at.desc`,
+            `/rest/v1/orders?select=id,user_id,plan,status,price,created_at,settled,contact_phone,profiles(first_name,last_name,email,slug,contact_phone)&order=created_at.desc`,
           );
           ADMIN.orders = data || [];
           renderOrdersTable();
@@ -1035,6 +1063,7 @@
             <td class="text-gray-600 font-mono text-xs">${p.contact_phone || o.contact_phone || "—"}</td>
             <td><span class="badge ${o.status === "active" ? "bg-green-50 text-green-600" : "bg-amber-50 text-amber-600"}">${o.status === "active" ? "Active" : "Pending"}</span></td>
             <td><div class="toggle ${o.status === "active" ? "on" : "off"}" onclick="toggleOrderStatus('${o.id}','${o.user_id}','${o.status}','${name}','${o.plan}')"></div></td>
+            <td><div class="toggle ${o.settled === "settled" ? "on" : "off"}" onclick="toggleSettlementStatus('${o.id}','${o.settled}')"></div></td>
             <td><button onclick="showQR('${o.id}')" class="text-xs font-medium p-2 text-navy hover:text-gold flex items-center gap-1 transition"><i class="fas fa-qrcode"></i> QR</button></td>
             <td class="text-gray-400 text-xs">${formatDate(o.created_at)}</td>
         </tr>`;
@@ -1042,6 +1071,18 @@
           .join("");
       }
 
+      function toggleSettlementStatus(
+        orderId,
+        currentStatus
+      ) {
+        if (currentStatus === "pending") {
+    //      ADMIN.pendingActivation = { orderId, userId, userName, plan };
+    updateSettlementStatus(orderId, "settled");
+        } else {
+          // Deactivate
+          updateSettlementStatus(orderId, "pending");
+        }
+      }
       function toggleOrderStatus(
         orderId,
         userId,
@@ -1138,6 +1179,14 @@
         const b = document.getElementById("pendingBadge");
         b.textContent = pending;
         b.classList.toggle("hidden", pending === 0);
+      }
+
+      async function updateSettlementStatus(id, status) {
+        await dbUpdate("orders", { id }, { settled: status, settled_at: status === "active" ? new Date().toISOString() : null });
+        const order = ADMIN.orders.find((o) => o.id === id);
+        if (order) order.settled = status;
+        renderOrdersTable();
+        showToast(status === "settled" ? "✓ Settlement approved!" : "Package settlement reverted");
       }
 
       // ── QR Code ────────────────────────────────────────────────
@@ -1327,13 +1376,23 @@
         renderAffiliatesTable();
       }
 
-      function renderAffiliatesTable() {
+   async function renderAffiliatesTable() {
         let data = ADMIN.affiliates.filter((a) => {
           if (ADMIN.affiliateFilter === "active") return a.status === "active";
           if (ADMIN.affiliateFilter === "inactive")
             return a.status === "inactive";
           return true;
         });
+        
+            var pendingCommission = await sbFetch('/rest/v1/rpc/get_pending_commission')
+  .then(res => {
+    if (res) {
+      return res
+    }
+    return 0;
+  })
+  .catch(() => 0);
+       
 
         // Calculate metrics
         const metricsPromises = data.map(async (a) => {
@@ -1364,10 +1423,6 @@
             );
             const totalCommission = affiliatesWithMetrics.reduce(
               (sum, a) => sum + (a.total_earnings || 0),
-              0,
-            );
-            const pendingCommission = affiliatesWithMetrics.reduce(
-              (sum, a) => sum + (a.pending_earnings || 0),
               0,
             );
 
@@ -1489,7 +1544,10 @@
         const discountPremium =
           parseInt(document.getElementById("discountPremium").value) || 0;
 
-        const slug = document.getElementById("affiliatePromoCode").value.trim().toUpperCase();
+        const slug = document
+          .getElementById("affiliatePromoCode")
+          .value.trim()
+          .toUpperCase();
 
         try {
           const affiliateData = {
@@ -1550,6 +1608,12 @@
 
       function closeModal(id) {
         document.getElementById(id).classList.remove("show");
+      }
+
+      function toggleSidebar() {
+        document.querySelector(".sidebar").classList.toggle("open");
+        document.querySelector(".sidebar .menu").classList.toggle("fa-bars");
+        document.querySelector(".sidebar .menu").classList.toggle("fa-xmark");
       }
 
       boot();

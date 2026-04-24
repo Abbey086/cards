@@ -100,7 +100,7 @@ async function resetPassword(email) {
     method: "POST",
     body: JSON.stringify({
       email,
-      redirect_to: window.location.origin + "/reset-password.html",
+      redirect_to:  "https://cards.amandatechnologies.com/reset-password.html",
     }),
   });
   return data;

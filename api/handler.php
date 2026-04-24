@@ -35,9 +35,9 @@ Plan:    " . strtoupper($plan) . " – UGX {$price}
 Cards:   {$cards}
 
 ---
-Log in to activate: https://amandacards.co.ug/admin/dashboard.html
+Log in to activate: https://cards.amandatechnologies.com/admin/dashboard.html
         ";
-        mail($ADMIN_EMAIL, $subjectAdmin, $bodyAdmin, "From: noreply@amandacards.co.ug\r\nReply-To: {$email}");
+        mail($ADMIN_EMAIL, $subjectAdmin, $bodyAdmin, "From: cards@amandatechnologies.com\r\nReply-To: {$email}");
 
         // Confirmation email to user
         $subjectUser = "Amanda Cards – Package Request Received";
@@ -60,7 +60,7 @@ Questions? Reply to this email or WhatsApp us.
 The Amanda Cards Team
 amandatechnologies@gmail.com
         ";
-        mail($email, $subjectUser, $bodyUser, "From: Amanda Cards <noreply@amandacards.co.ug>");
+        mail($email, $subjectUser, $bodyUser, "From: Amanda Cards <cards@amandatechnologies.com>");
 
         echo json_encode(['success' => true, 'message' => 'Package request submitted']);
         break;
@@ -87,13 +87,13 @@ Message:
 {$message}
 
 ---
-View your dashboard: https://amandacards.co.ug/dashboard.html
+View your dashboard: https://cards.amandatechnologies.com/dashboard.html
         ";
-        if ($cardEmail) mail($cardEmail, $subjectOwner, $bodyOwner, "From: Amanda Cards <noreply@amandacards.co.ug>\r\nReply-To: {$senderEmail}");
+        if ($cardEmail) mail($cardEmail, $subjectOwner, $bodyOwner, "From: Amanda Cards <cards@amandatechnologies.com>\r\nReply-To: {$senderEmail}");
 
         // Copy to admin
         $subjectAdmin = "💬 Contact form: {$senderName} → {$cardOwner}";
-        mail($ADMIN_EMAIL, $subjectAdmin, $bodyOwner, "From: noreply@amandacards.co.ug");
+        mail($ADMIN_EMAIL, $subjectAdmin, $bodyOwner, "From: cards@amandatechnologies.com");
 
         echo json_encode(['success' => true, 'message' => 'Message sent']);
         break;
@@ -115,7 +115,7 @@ Your digital card is live at:
 {$cardUrl}
 
 Next steps:
-1. Log in to your dashboard: https://amandacards.co.ug/dashboard.html
+1. Log in to your dashboard: https://cards.amandatechnologies.com/dashboard.html
 2. Set up your profile (logo, phone, bio, socials, services, gallery)
 3. Share your card link or QR code and start networking!
 
@@ -125,7 +125,7 @@ Your number will be physically printed on your NFC card and cannot be changed wi
 Welcome to the Amanda Cards family!
 The Amanda Cards Team
         ";
-        $sent = mail($email, $subject, $body, "From: Amanda Cards <noreply@amandacards.co.ug>");
+        $sent = mail($email, $subject, $body, "From: Amanda Cards <cards@amandatechnologies.com>");
 
         echo json_encode(['success' => $sent]);
         break;

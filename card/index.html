@@ -674,6 +674,8 @@
         // Premium features
         if (cp?.video_url) {
           document.getElementById("videoPlayer").src = cp.video_url;
+        }else {
+          document.getElementById("tab-video").style.display = "none";
         }
         if (!isPremium) {
           document.getElementById("tab-contact").style.display = "none";

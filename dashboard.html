@@ -332,7 +332,9 @@
                 >
               </div>
               <p class="text-xs text-gray-400">
-                Activation usually takes within 24 hours.
+                Activation usually takes within 24 hours. <b class="text-navy">You will pay the amount of
+                <span class="font-bold text-amber-500" id="pendingAmount">—</span>
+                  due activation. Thank you for your patience!</b>
               </p>
             </div>
           </div>
@@ -555,11 +557,18 @@
                     ></div>
                   </div>
                 </div>
-                <div class="font-display text-3xl font-bold text-navy mb-1">
+                <p class="text-gray-500 line-through hidden" id="actual1">
+                  65,000
+                </p>
+
+                <div
+                  id="discountStarter"
+                  class="font-display text-3xl font-bold text-navy mb-1"
+                >
                   65,000
                   <span class="text-sm text-gray-400 font-normal">UGX</span>
                 </div>
-                <div class="text-xs text-gray-400 mb-4">one-time</div>
+                <div class="text-xs text-gray-400 mb-4">per year</div>
                 <ul class="space-y-2 text-xs text-gray-600">
                   <li class="flex items-center gap-2">
                     <i class="fas fa-check text-navy"></i> 1 NFC physical card
@@ -600,12 +609,17 @@
                     ></div>
                   </div>
                 </div>
-                <p class="text-gray-500 line-through">120,000</p>
-                <div class="font-display text-3xl font-bold text-navy mb-1">
+                <p class="text-gray-500 line-through hidden" id="actual2">
+                  120,000
+                </p>
+                <div
+                  id="discountPremium"
+                  class="font-display text-3xl font-bold text-navy mb-1"
+                >
                   120,000
                   <span class="text-sm text-gray-400 font-normal">UGX</span>
                 </div>
-                <div class="text-xs text-gray-400 mb-4">one-time</div>
+                <div class="text-xs text-gray-400 mb-4">per year</div>
                 <ul class="space-y-2 text-xs text-gray-600">
                   <li class="flex items-center gap-2">
                     <i class="fas fa-check text-gold"></i> 2 NFC physical cards
@@ -634,25 +648,38 @@
                 activate your package.
               </p>
               <div class="space-y-3">
-                <input
-                  type="tel"
-                  id="contactPhone"
-                  placeholder="+256 700 000 000"
-                  class="form-input w-full"
-                  oninput="validatePkgForm()"
-                />
+                <div class="md:grid grid-cols-3 gap-4 space-y-3 md:space-y-0">
+                  <input
+                    type="tel"
+                    id="contactPhone"
+                    placeholder="+256 700 000 000"
+                    class="form-input w-full md:col-span-2"
+                    oninput="validatePkgForm()"
+                  />
+                  <input
+                    type="text"
+                    readonly
+                    id="promoCode"
+                    placeholder="Promo Code (optional)"
+                    class="form-input w-full md:col-span-1"
+                  />
+                </div>
+                <button
+                  class="fas fa-spinner animate-spin text-navy ml-[50%] hidden -pl-1/2 text-lg"
+                  id="pkgLoader"
+                ></button>
+                <p id="pkgError" class="text-xs text-red-500 mt-2 hidden">
+                  Please select a plan and enter a phone number.
+                </p>
                 <button
                   onclick="submitPackage()"
                   id="submitPkgBtn"
-                  class="gold-gradient text-navy font-bold px-6 py-3 rounded-xl text-sm hover:opacity-90 transition w-full"
+                  class="gold-gradient disabled:bg-gray-400 disabled:cursor-not-allowed text-navy font-bold px-6 py-3 rounded-xl text-sm hover:opacity-90 transition w-full"
                   disabled
                 >
                   Submit Request
                 </button>
               </div>
-              <p id="pkgError" class="text-xs text-red-500 mt-2 hidden">
-                Please select a plan and enter a phone number.
-              </p>
             </div>
           </div>
 
@@ -1283,7 +1310,7 @@
         else if (view === "messages") loadMessages();
       }
 
-      // ── Overview ───────────────────────────────────────────────
+      // ── Overview ────── ────── ─────── ──── ───── ───── ───── ────
       async function renderOverview() {
         const p = APP.profile;
         const noPlan = document.getElementById("noPlanState");
@@ -1302,6 +1329,19 @@
           active.classList.add("hidden");
           document.getElementById("pendingPhone").textContent =
             p.contact_phone || "—";
+          var toPay = p.plan === "premium" ? 120000 : 65000;
+          var discount = await dbSelect(
+            "affiliates",
+            `?slug=eq.${p.promo_code}&select=discount_premium,discount_starter`,
+          );
+          discount = discount?.[0] || {};
+          if (p.plan === "premium" && discount.discount_premium) {
+            toPay -= discount.discount_premium;
+          }
+          if (p.plan === "starter" && discount.discount_starter) {
+            toPay -= discount.discount_starter;
+          }
+          document.getElementById("pendingAmount").textContent = "UGX. "+toPay.toLocaleString();
           return;
         }
         // Active
@@ -1414,6 +1454,35 @@
         }
       }
 
+      async function getAffiliatedata(code) {
+        const affiData = await dbSelect(
+          "affiliates",
+          `?slug=eq.${code}&select=*`,
+        );
+
+        if (affiData.length === 0) {
+          document.getElementById("actual1").classList.add("hidden");
+          document.getElementById("actual2").classList.add("hidden");
+          document.getElementById("promoCode").removeAttribute("readonly");
+          return;
+        }
+
+        if (
+          affiData[0].discount_premium != 0 ||
+          affiData[0].discount_starter != 0
+        ) {
+          document.getElementById("actual1").classList.remove("hidden");
+          document.getElementById("actual2").classList.remove("hidden");
+          document.getElementById("discountPremium").textContent =
+            120000 - affiData[0].discount_premium;
+          document.getElementById("discountStarter").textContent =
+            65000 - affiData[0].discount_starter;
+        } else {
+          document.getElementById("actual1").classList.add("hidden");
+          document.getElementById("actual2").classList.add("hidden");
+        }
+      }
+
       function renderLinkPerformance(clicks) {
         const counts = {};
         clicks.forEach((c) => {
@@ -1492,6 +1561,8 @@
         const p = APP.profile;
         const hasPlan = p?.plan && p?.plan_status !== "pending";
         const isPending = p?.plan_status === "pending";
+        document.getElementById("promoCode").value = p?.promo_code || "";
+        getAffiliatedata(p?.promo_code || "");
         document
           .getElementById("planChooser")
           .classList.toggle("hidden", hasPlan);
@@ -1541,11 +1612,12 @@
       }
 
       async function submitPackage() {
+        console.log("Submitting package request...");
         const phone = document.getElementById("contactPhone").value.trim();
         const packagePromoCode = document
-          .getElementById("packagePromoCode")
+          .getElementById("promoCode")
           .value.trim()
-          .toLowerCase();
+          .toUpperCase();
         const pkgError = document.getElementById("pkgError");
         pkgError.classList.add("hidden");
 
@@ -1864,6 +1936,7 @@
             `<img src="${url}" class="w-full h-full object-cover">`;
           // Save to card_profiles immediately
           if (APP.cardProfile) {
+      
             await dbUpdate(
               "card_profiles",
               { user_id: APP.user.id },

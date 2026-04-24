@@ -300,6 +300,7 @@
           const data = await signUpEmail(email, password, {
             first_name: firstName,
             last_name: lastName,
+            emailRedirectTo: `https://cards.amandatechnologies.com/login.html`,
           });
 
           if (data.access_token) {

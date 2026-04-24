@@ -54,14 +54,46 @@
         margin-left: 240px;
         padding: 2rem;
       }
+
       .nav-link {
         display: block;
         padding: 0.75rem 1rem;
         color: #94a3b8;
         text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
         border-radius: 0.5rem;
         margin-bottom: 0.25rem;
         transition: all 0.2s;
+      }
+            @media screen and (max-width: 768px) {
+        .main-content {
+          margin-left: 50px;
+        }
+        .sidebar.open{
+          width: 50px;
+        }
+
+        .sidebar:not(.open) .menu{
+          font-size: 1.4rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+        }
+        .sidebar:not(.open) .menu::after{
+          content: "Close";
+          font-size: .75rem;
+          color: #c9a84c;
+        }
+        .sidebar.open .xcc {
+          display: none;
+        }
+        .sidebar.open .nav-link{
+          padding: 0.65rem;
+          justify-content: center;
+        }
       }
       .nav-link:hover {
         background: rgba(201, 168, 76, 0.1);
@@ -169,9 +201,9 @@
   </head>
   <body>
     <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="p-6">
-        <div class="flex items-center gap-3 mb-8">
+    <div class="sidebar open">
+      <div class="md:p-6 p-1">
+        <div class="flex xcc items-center gap-3 mb-8 mt-2 md:mt-0">
           <div
             class="w-8 h-8 gold-gradient rounded-lg flex items-center justify-center"
           >
@@ -184,40 +216,41 @@
             <div class="text-xs text-gray-400">Affiliate Dashboard</div>
           </div>
         </div>
+        <script>
+          function menu() {
+            document.querySelector(".sidebar").classList.toggle("open");
+            document.querySelector(".sidebar .menu").classList.toggle("fa-bars");
+            document.querySelector(".sidebar .menu").classList.toggle("fa-xmark");
+          }
+        </script>
+        <i onclick="menu()" class="fas fa-bars md:hidden menu text-white text-lg mx-auto block text-center mt-1 mb-6"></i>
         <nav class="space-y-1">
           <a
             href="#overview"
             class="nav-link active"
             onclick="showSection('overview')"
           >
-            <i class="fas fa-chart-pie w-4 text-center"></i> Overview
+            <i class="fas fa-chart-pie w-4 text-center"></i> <span class="xcc">Overview</span>
           </a>
           <a
             href="#referrals"
             class="nav-link"
             onclick="showSection('referrals')"
           >
-            <i class="fas fa-users w-4 text-center"></i> Referrals
-          </a>
-          <a
-            href="#earnings"
-            class="nav-link"
-            onclick="showSection('earnings')"
-          >
-            <i class="fas fa-dollar-sign w-4 text-center"></i> Earnings
+            <i class="fas fa-users w-4 text-center"></i> <span class="xcc">Referrals</span>
           </a>
           <a
             href="#settings"
             class="nav-link"
             onclick="showSection('settings')"
           >
-            <i class="fas fa-cog w-4 text-center"></i> Settings
+            <i class="fas fa-cog w-4 text-center"></i> <span class="xcc">Settings</span>
           </a>
         </nav>
       </div>
-      <div class="absolute bottom-6 left-6 right-6">
+      <div class="absolute bottom-6 md:left-6 md:right-6 w-full md:w-auto grid md:block place-items-center"> 
         <button onclick="logout()" class="w-full text-left nav-link">
-          <i class="fas fa-sign-out-alt w-4 text-center"></i> Logout
+          <i class="fas fa-sign-out-alt w-4 text-center"></i> <span class="xcc">Logout</span>
         </button>
       </div>
     </div>
@@ -236,7 +269,7 @@
         </div>
         <div class="flex items-center gap-4">
           <div class="text-right">
-            <div class="text-sm text-gray-500">Total Earnings</div>
+            <div class="text-sm text-gray-500">Unsettled Earnings</div>
             <div
               class="font-display font-bold text-navy text-xl"
               id="totalEarnings"
@@ -249,7 +282,7 @@
 
       <!-- Overview Section -->
       <div id="section-overview">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div class="bg-white rounded-2xl p-6 border border-gray-100">
             <div class="flex items-center justify-between">
               <div>
@@ -281,21 +314,7 @@
           <div class="bg-white rounded-2xl p-6 border border-gray-100">
             <div class="flex items-center justify-between">
               <div>
-                <div class="text-sm text-gray-500">Pending Earnings</div>
-                <div
-                  class="font-display font-bold text-navy text-2xl"
-                  id="pendingEarnings"
-                >
-                  UGX 0
-                </div>
-              </div>
-              <i class="fas fa-clock text-amber-500 text-2xl"></i>
-            </div>
-          </div>
-          <div class="bg-white rounded-2xl p-6 border border-gray-100">
-            <div class="flex items-center justify-between">
-              <div>
-                <div class="text-sm text-gray-500">Paid Earnings</div>
+                <div class="text-sm text-gray-500">Total Earnings</div>
                 <div
                   class="font-display font-bold text-navy text-2xl"
                   id="paidEarnings"
@@ -326,6 +345,19 @@
                 <button
                   onclick="copyPromoCode()"
                   class="text-gold hover:text-gold-light transition"
+                >
+                  <i class="fas fa-copy"></i>
+                </button>
+              </div>
+              <div class="grid grid-cols-7 md:grid-cols-8 items-center gap-2 mt-4">
+                <p
+                  class="bg-white px-3 py-1 col-span-6 overflow-x-auto md:col-span-7 rounded border font-mono text-navy"
+                  id="promoCodeUrl"
+                  >—</p
+                >
+                <button
+                  onclick="copyPromoCodeUrl()"
+                  class="text-gold col-span-1 md:col-span-1 hover:text-gold-light transition"
                 >
                   <i class="fas fa-copy"></i>
                 </button>
@@ -363,7 +395,7 @@
           <div class="p-6 border-b border-gray-100">
             <h3 class="font-display font-semibold text-navy">Your Referrals</h3>
             <p class="text-sm text-gray-500 mt-1">
-              Customers who used your promo code
+              Customers who used your promo code. <a href="https://wa.me/2567453943599" target="_blank" class="text-gold hover:text-gold-light">Click to inquire about unsettled earnings</a>
             </p>
           </div>
           <div class="overflow-x-auto">
@@ -374,10 +406,10 @@
                     Customer
                   </th>
                   <th class="text-left p-4 text-xs font-semibold text-gray-600">
-                    Plan
+                    Withdrawal Status
                   </th>
                   <th class="text-left p-4 text-xs font-semibold text-gray-600">
-                    Status
+                   Status
                   </th>
                   <th class="text-left p-4 text-xs font-semibold text-gray-600">
                     Commission
@@ -478,7 +510,7 @@
                   <label class="block text-sm font-medium text-gray-700 mb-1"
                     >Email</label
                   >
-                  <input type="email" id="email" class="form-input" required />
+                  <input type="email" id="email" class="form-input" readonly />
                 </div>
                 <button
                   type="submit"
@@ -518,18 +550,50 @@
           window.location.href = "../dashboard.html";
           return;
         }
-
         AFFILIATE.profile = profile[0];
+        var totalearnings = 0;
+        var pendingearnings = 0;
+        const orders = await dbSelect(
+          "orders",
+          `?affiliate_id=eq.${profile[0].id}&select=plan,price`,
+        );
+        const pendingOrders = await dbSelect(
+          "orders",
+          `?affiliate_id=eq.${profile[0].id}&status=eq.pending&select=plan,price`,
+        );
+        const unsettledOrders = await dbSelect(
+          "orders",
+          `?affiliate_id=eq.${profile[0].id}&status=eq.active&select=plan,price&settled=eq.pending`,
+        );
+        // orders[1] = {
+        //   plan: "starter",
+        //   price: 65000,
+        // }
+        totalearnings = orders.reduce((sum, o) => sum + (o.plan == "premium" ? AFFILIATE.profile.commission_premium : AFFILIATE.profile.commission_starter), 0);
+        pendingearnings = pendingOrders.reduce((sum, o) => sum + (o.plan == "premium" ? AFFILIATE.profile.commission_premium : AFFILIATE.profile.commission_starter), 0);
+        console.log("Total earnings calculated:", orders);
+        AFFILIATE.profile.pending_earnings = pendingearnings;
+        AFFILIATE.profile.unsettled = unsettledOrders.reduce((sum, o) => sum + (o.plan == "premium" ? AFFILIATE.profile.commission_premium : AFFILIATE.profile.commission_starter), 0);
+        console.log("Pending earnings calculated:", pendingOrders);
+        await dbUpdate(
+          "affiliates",
+          { id: profile[0].id },
+          { total_earnings: totalearnings },
+        );
+
+  
         document.getElementById("affiliateName").textContent =
           `${AFFILIATE.profile.first_name} ${AFFILIATE.profile.last_name}`;
         document.getElementById("promoCode").textContent =
           AFFILIATE.profile.slug;
+        document.getElementById("promoCodeUrl").textContent =
+          `https://cards.amandatechnologies.com/signup.html?promo=${AFFILIATE.profile.slug}`;
         document.getElementById("commissionStarter").textContent =
           `UGX ${AFFILIATE.profile.commission_starter?.toLocaleString() || 0}`;
         document.getElementById("commissionPremium").textContent =
           `UGX ${AFFILIATE.profile.commission_premium?.toLocaleString() || 0}`;
         document.getElementById("totalEarnings").textContent =
-          `UGX ${AFFILIATE.profile.total_earnings?.toLocaleString() || 0}`;
+          `UGX ${AFFILIATE.profile.unsettled?.toLocaleString() || 0}`;
 
         await loadReferrals();
         await loadEarnings();
@@ -567,8 +631,7 @@
         document.getElementById("totalReferrals").textContent = totalReferrals;
         document.getElementById("activeReferrals").textContent =
           activeReferrals;
-        document.getElementById("pendingEarnings").textContent =
-          `UGX ${pendingEarnings.toLocaleString()}`;
+        
         document.getElementById("paidEarnings").textContent =
           `UGX ${paidEarnings.toLocaleString()}`;
       }
@@ -603,8 +666,8 @@
               </div>
             </td>
             <td class="p-4">
-              <span class="badge ${r.plan === "premium" ? "bg-gold/10 text-gold" : "bg-blue-50 text-blue-600"}">
-                ${r.plan === "premium" ? "⭐ Premium" : "Starter"}
+              <span class="badge ${r.settled === "settled" ? "bg-green-50 text-green-600" : "bg-blue-50 text-blue-600"}">
+                ${r.settled === "settled" ? "Withdrawn" : "Pending"}
               </span>
             </td>
             <td class="p-4">
@@ -626,7 +689,19 @@
             '<tr><td colspan="3" class="text-center py-8 text-gray-400 text-sm">No earnings yet</td></tr>';
           return;
         }
-        // Render earnings table
+        body.innerHTML = AFFILIATE.earnings
+          .map((e) => {
+            return `<tr>
+            <td class="p-4 font-medium text-navy">UGX ${e.amount.toLocaleString()}</td>
+            <td class="p-4">
+              <span class="badge ${e.status === "paid" ? "bg-green-50 text-green-600" : "bg-amber-50 text-amber-600"}">
+                ${e.status === "paid" ? "Paid" : "Pending"}
+              </span>
+            </td>
+            <td class="p-4 text-sm text-gray-500">${formatDate(e.created_at)}</td>
+          </tr>`;
+          })
+          .join("");
       }
 
       function showSection(sec) {
@@ -681,6 +756,11 @@
         const code = document.getElementById("promoCode").textContent;
         navigator.clipboard.writeText(code);
         showToast("Promo code copied to clipboard");
+      }
+      function copyPromoCodeUrl() {
+        const code = document.getElementById("promoCodeUrl").textContent;
+        navigator.clipboard.writeText(code);
+        showToast("Promo code link copied to clipboard");
       }
 
       function showToast(message, type = "success") {
