@@ -709,19 +709,17 @@ function showActual404() {
       // Removed tabs, all sections shown
 
       // ── Save Contact ───────────────────────────────────────────
-     function saveContact() {
+    function saveContact() {
   try {
     const p = CARD.profile || {};
     const cp = CARD.cardProfile || {};
     
-    // 1. Clean and sanitize the filename
     const firstName = p.first_name || "";
     const lastName = p.last_name || "";
     const name = `${firstName} ${lastName}`.trim() || "Contact";
     const fileName = `${name.replace(/[^a-z0-9]/gi, "_")}.vcf`;
 
-    // 2. Build vCard with proper CRLF line endings (\r\n)
-    // Note: Use CHARSET=UTF-8 for compatibility with non-English characters
+    // 1. Construct the string - ensure NO spaces or newlines before BEGIN
     const vcard = [
       "BEGIN:VCARD",
       "VERSION:3.0",
@@ -732,43 +730,41 @@ function showActual404() {
       cp.website ? `URL;TYPE=WORK:${cp.website}` : "",
       cp.location ? `ADR;TYPE=WORK;CHARSET=UTF-8:;;${cp.location};;;;` : "",
       `URL:${window.location.href}`,
-      `REV:${new Date().toISOString()}`, // Revision timestamp
+      `REV:${new Date().toISOString()}`,
       "END:VCARD",
     ]
       .filter(Boolean)
       .join("\r\n");
 
-    // 3. Create Blob with explicit UTF-8 BOM for Windows/Outlook compatibility
-    const blob = new Blob(["\ufeff", vcard], { type: "text/vcard;charset=utf-8" });
+    // 2. Remove the "\ufeff" and use a plain Blob
+    // We use TextEncoder to ensure the data is strictly UTF-8 bytes
+    const encoder = new TextEncoder();
+    const vcardUint8 = encoder.encode(vcard);
+    const blob = new Blob([vcardUint8], { type: "text/vcard" });
     
-    // 4. Handle modern browsers (Chrome/Firefox/Safari)
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     
-    // Defensive coding: Ensure link is not visible and appended to body
     a.style.display = "none";
     a.href = url;
     a.download = fileName;
-    a.setAttribute("target", "_blank"); // Fallback for some mobile browsers
     
     document.body.appendChild(a);
     a.click();
 
-    // 5. Cleanup: Use a slight delay to ensure the browser registers the click
     setTimeout(() => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     }, 200);
 
-    // 6. Analytics and UI Feedback
     if (typeof trackClick === "function") trackClick("save_contact");
     if (typeof toast === "function") toast("Contact saved!");
 
   } catch (err) {
     console.error("VCard Download Failed:", err);
-    if (typeof toast === "function") toast("Error saving contact.");
   }
 }
+    
       function formatLink(url) {
         if (!url) return "";
         // If it doesn't start with http:// or https://, add it
