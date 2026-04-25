@@ -709,32 +709,66 @@ function showActual404() {
       // Removed tabs, all sections shown
 
       // ── Save Contact ───────────────────────────────────────────
-      function saveContact() {
-        const p = CARD.profile;
-        const cp = CARD.cardProfile;
-        const name = `${p.first_name || ""} ${p.last_name || ""}`.trim();
-        const vcard = [
-          "BEGIN:VCARD",
-          "VERSION:3.0",
-          `FN:${name}`,
-          `N:${p.last_name || ""};${p.first_name || ""};;;`,
-          cp?.phone ? `TEL;TYPE=CELL:${cp.phone}` : "",
-          cp?.email ? `EMAIL:${cp.email}` : "",
-          cp?.website ? `URL:${cp.website}` : "",
-          cp?.location ? `ADR:;;${cp.location};;;;` : "",
-          `URL:${window.location.href}`,
-          "END:VCARD",
-        ]
-          .filter(Boolean)
-          .join("\n");
-        const blob = new Blob([vcard], { type: "text/vcard" });
-        const a = document.createElement("a");
-        a.href = formatLink(URL.createObjectURL(blob));
-        a.download = `${name.replace(/\s+/g, "-")}.vcf`;
-        a.click();
-        trackClick("save_contact");
-        toast("Contact saved!");
-      }
+     function saveContact() {
+  try {
+    const p = CARD.profile || {};
+    const cp = CARD.cardProfile || {};
+    
+    // 1. Clean and sanitize the filename
+    const firstName = p.first_name || "";
+    const lastName = p.last_name || "";
+    const name = `${firstName} ${lastName}`.trim() || "Contact";
+    const fileName = `${name.replace(/[^a-z0-9]/gi, "_")}.vcf`;
+
+    // 2. Build vCard with proper CRLF line endings (\r\n)
+    // Note: Use CHARSET=UTF-8 for compatibility with non-English characters
+    const vcard = [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      `FN;CHARSET=UTF-8:${name}`,
+      `N;CHARSET=UTF-8:${lastName};${firstName};;;`,
+      cp.phone ? `TEL;TYPE=CELL,VOICE:${cp.phone}` : "",
+      cp.email ? `EMAIL;TYPE=INTERNET:${cp.email}` : "",
+      cp.website ? `URL;TYPE=WORK:${cp.website}` : "",
+      cp.location ? `ADR;TYPE=WORK;CHARSET=UTF-8:;;${cp.location};;;;` : "",
+      `URL:${window.location.href}`,
+      `REV:${new Date().toISOString()}`, // Revision timestamp
+      "END:VCARD",
+    ]
+      .filter(Boolean)
+      .join("\r\n");
+
+    // 3. Create Blob with explicit UTF-8 BOM for Windows/Outlook compatibility
+    const blob = new Blob(["\ufeff", vcard], { type: "text/vcard;charset=utf-8" });
+    
+    // 4. Handle modern browsers (Chrome/Firefox/Safari)
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    
+    // Defensive coding: Ensure link is not visible and appended to body
+    a.style.display = "none";
+    a.href = url;
+    a.download = fileName;
+    a.setAttribute("target", "_blank"); // Fallback for some mobile browsers
+    
+    document.body.appendChild(a);
+    a.click();
+
+    // 5. Cleanup: Use a slight delay to ensure the browser registers the click
+    setTimeout(() => {
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }, 200);
+
+    // 6. Analytics and UI Feedback
+    if (typeof trackClick === "function") trackClick("save_contact");
+    if (typeof toast === "function") toast("Contact saved!");
+
+  } catch (err) {
+    console.error("VCard Download Failed:", err);
+    if (typeof toast === "function") toast("Error saving contact.");
+  }
+}
       function formatLink(url) {
         if (!url) return "";
         // If it doesn't start with http:// or https://, add it
