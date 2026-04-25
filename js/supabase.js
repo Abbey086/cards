@@ -96,7 +96,7 @@ async function signUpEmail(email, password, meta = {}) {
 
 // ── Auth: Reset Password ─────────────────────────────────────
 async function resetPassword(email) {
-  const data = await sbFetch("/auth/v1/recover?redirect_to=https://cards.amandatechnologies.com/reset_password.html", {
+  const data = await sbFetch("/auth/v1/recover?redirect_to=https://cards.amandatechnologies.com/reset-password.html", {
     method: "POST",
     body: JSON.stringify({
       email,
