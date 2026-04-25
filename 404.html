@@ -290,14 +290,14 @@
         <div class="font-display text-6xl font-bold text-white/10 mb-4">
           404
         </div>
-        <h1 class="font-display text-xl font-bold text-white mb-2">
+        <h1 id="file-nf" class="font-display text-xl font-bold text-white mb-2">
           Card Not Found
         </h1>
-        <p class="text-white/40 text-sm mb-6">
+        <p id="text-nf" class="text-white/40 text-sm mb-6">
           This digital card doesn't exist or may have been removed.
         </p>
         <a href="/" class="text-gold text-sm hover:underline"
-          >← Back to Amanda Cards</a
+          >← Back to Amanda Cards Homepage</a
         >
       </div>
     </div>
@@ -575,6 +575,8 @@ async function loadCardData(slug) {
 }
 
 function showActual404() {
+  document.getElementById("file-nf").textContent = "Seems you're lost";
+  document.getElementById("text-nf").textContent = "This url doesn't exist or may have been removed.";
   document.getElementById("loadingOverlay").style.display = "none";
   document.getElementById("notFound").classList.remove("hidden");
   document.getElementById("cardContent").classList.add("hidden");

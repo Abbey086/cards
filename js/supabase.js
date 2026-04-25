@@ -86,7 +86,7 @@ async function signInEmail(email, password) {
 
 // ── Auth: Sign Up ───────────────────────────────────────────
 async function signUpEmail(email, password, meta = {}) {
-  const data = await sbFetch("/auth/v1/signup&redirect_to=https://cards.amandatechnologies.com/login.html", {
+  const data = await sbFetch("/auth/v1/signup?redirect_to=https://cards.amandatechnologies.com/login.html", {
     method: "POST",
     body: JSON.stringify({ email, password, data: meta }),
   });
@@ -96,7 +96,7 @@ async function signUpEmail(email, password, meta = {}) {
 
 // ── Auth: Reset Password ─────────────────────────────────────
 async function resetPassword(email) {
-  const data = await sbFetch("/auth/v1/recover&redirect_to=https://cards.amandatechnologies.com/reset_password.html", {
+  const data = await sbFetch("/auth/v1/recover?redirect_to=https://cards.amandatechnologies.com/reset_password.html", {
     method: "POST",
     body: JSON.stringify({
       email,
