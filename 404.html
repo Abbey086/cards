@@ -15,11 +15,7 @@
       rel="stylesheet"
     />
     <!-- Load supabase from parent if nested, or same dir -->
-   <script>
-  // Force base path for the supabase config relative to the root
-  const scriptPath = "/js/supabase.js"; 
-  document.write(`<script src="${scriptPath}"><\/script>`);
-</script>
+   <script src="/js/supabase.js"></script>
     <style>
       :root {
         --brand: #1b2b4b;
@@ -531,7 +527,7 @@
 
 async function loadCardData(slug) {
   try {
-    // Fetch profile by slug from Supabase
+    // 1. Fetch profile by slug first (we need the ID)
     const profiles = await sbFetch(
       `/rest/v1/profiles?slug=eq.${encodeURIComponent(slug)}&plan_status=eq.active&select=*`,
       { anonymous: true }
@@ -543,36 +539,27 @@ async function loadCardData(slug) {
     }
 
     CARD.profile = profiles[0];
+    const userId = CARD.profile.id;
     
-            // Fetch card profile
-          const cp = await sbFetch(
-            `/rest/v1/card_profiles?user_id=eq.${CARD.profile.id}&select=*`,
-            { anonymous: true },
-          );
-          CARD.cardProfile = cp?.[0] || null;
+    // 2. Fetch the rest in PARALLEL
+    const [cpResults, svResults, glResults] = await Promise.all([
+      sbFetch(`/rest/v1/card_profiles?user_id=eq.${userId}&select=*`, { anonymous: true }),
+      sbFetch(`/rest/v1/services?user_id=eq.${userId}&select=*&order=sort_order.asc`, { anonymous: true }),
+      sbFetch(`/rest/v1/gallery?user_id=eq.${userId}&select=*&order=sort_order.asc`, { anonymous: true })
+    ]);
 
-          // Fetch services
-          const sv = await sbFetch(
-            `/rest/v1/services?user_id=eq.${CARD.profile.id}&select=*&order=sort_order.asc`,
-            { anonymous: true },
-          );
-          CARD.services = sv || [];
-
-          // Fetch gallery
-          const gl = await sbFetch(
-            `/rest/v1/gallery?user_id=eq.${CARD.profile.id}&select=*&order=sort_order.asc`,
-            { anonymous: true },
-          );
-          CARD.gallery = gl || [];
-
+    CARD.cardProfile = cpResults?.[0] || null;
+    CARD.services = svResults || [];
+    CARD.gallery = glResults || [];
     
-    renderCard(); // This will show the #cardContent div
+    renderCard(); 
     trackVisit(slug);
   } catch (e) {
     console.error("Routing error:", e);
     showActual404();
   }
 }
+
 
 function showActual404() {
   document.getElementById("file-nf").textContent = "Seems you're lost";
